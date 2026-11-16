@@ -25,13 +25,22 @@ class Api {
   static Future<void> _saveSession(Map<String, dynamic> b) async {
     final p = await SharedPreferences.getInstance();
     await p.setString('token', b['token']);
+    await p.setString('user', jsonEncode(b['user']));
   }
 
   static Future<bool> hasSession() async =>
       (await SharedPreferences.getInstance()).getString('token') != null;
 
-  static Future<void> logout() async =>
-      (await SharedPreferences.getInstance()).remove('token');
+  static Future<Map<String, dynamic>?> currentUser() async {
+    final s = (await SharedPreferences.getInstance()).getString('user');
+    return s == null ? null : jsonDecode(s) as Map<String, dynamic>;
+  }
+
+  static Future<void> logout() async {
+    final p = await SharedPreferences.getInstance();
+    await p.remove('token');
+    await p.remove('user');
+  }
 
   static Future<void> login(String email, String password) async {
     final r = await http.post(Uri.parse('$apiBase/auth/login'),
