@@ -1,0 +1,56 @@
+<!doctype html><html><meta charset="utf-8">
+<style>
+*{box-sizing:border-box;margin:0}
+body{font-family:system-ui,"Noto Naskh Arabic","Noto Sans Arabic",sans-serif;background:#111;color:#fff;direction:rtl;padding:14px;width:800px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{border-radius:22px;padding:18px 18px 20px;position:relative;overflow:hidden}
+.nm{font-size:12px;opacity:.7;margin-bottom:12px;direction:ltr;font-weight:700}
+.b{height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:15px;margin-bottom:10px}
+.r{display:flex;gap:10px;align-items:center;margin-top:12px}
+.i{width:44px;height:44px;display:grid;place-items:center;flex:none}
+.t{padding:8px 14px;font-size:13px;font-weight:700}
+svg{display:block}
+/* 1 soft neumorphic dark */
+.c1{background:#1e2126}
+.c1 .b,.c1 .i,.c1 .t{background:#1e2126;box-shadow:6px 6px 14px #14161a,-6px -6px 14px #282c32;color:#cfd3da;border-radius:14px}
+.c1 .b.p{color:#e8b4b8}
+.c1 .t{border-radius:20px}.c1 .t.on{box-shadow:inset 4px 4px 9px #14161a,inset -4px -4px 9px #282c32;color:#e8b4b8}
+.c1 .i{border-radius:50%}
+/* 2 dusty rose pastel flat */
+.c2{background:#2a2326}
+.c2 .b.p{background:#c98f98;color:#2a2326}.c2 .b.s{background:#3a2f33;color:#e9cfd3}
+.c2 .i{background:#3a2f33;border-radius:14px;color:#e9cfd3}.c2 .t{background:#3a2f33;border-radius:20px;color:#e9cfd3}.c2 .t.on{background:#c98f98;color:#2a2326}
+/* 3 classic bevel gradient muted blue */
+.c3{background:#20252c}
+.c3 .b.p{background:linear-gradient(#7f9bb8,#5f7c9b);border:1px solid #4a6580;box-shadow:inset 0 1px 0 #ffffff55,0 2px 4px #0006;color:#fff;text-shadow:0 -1px 0 #0004;border-radius:10px}
+.c3 .b.s{background:linear-gradient(#4a5360,#39424e);border:1px solid #2c333c;box-shadow:inset 0 1px 0 #ffffff22,0 2px 4px #0006;color:#e3e8ee;border-radius:10px}
+.c3 .i{background:linear-gradient(#4a5360,#39424e);border:1px solid #2c333c;box-shadow:inset 0 1px 0 #ffffff22;border-radius:10px;color:#e3e8ee}
+.c3 .t{background:linear-gradient(#4a5360,#39424e);border:1px solid #2c333c;border-radius:8px;color:#e3e8ee}.c3 .t.on{background:linear-gradient(#7f9bb8,#5f7c9b);color:#fff}
+/* 4 retro outline with offset shadow, cream */
+.c4{background:#efe6d3;color:#2b2620}
+.c4 .b,.c4 .i,.c4 .t{border:2px solid #2b2620;box-shadow:3px 3px 0 #2b2620;color:#2b2620}
+.c4 .b.p{background:#e8b58a}.c4 .b.s{background:#f8f1e1}.c4 .i{background:#f8f1e1;border-radius:12px}.c4 .t{background:#f8f1e1;border-radius:10px;box-shadow:2px 2px 0 #2b2620}.c4 .t.on{background:#e8b58a}
+.c4 .nm{color:#2b2620}
+/* 5 sage green glass soft */
+.c5{background:linear-gradient(160deg,#27322e,#1d2522)}
+.c5 .b.p{background:#9fbfae;color:#1d2522}.c5 .b.s{background:#ffffff14;border:1px solid #ffffff26;color:#d6e6dc}
+.c5 .i{background:#ffffff14;border:1px solid #ffffff22;border-radius:50%;color:#d6e6dc}.c5 .t{background:#ffffff12;border:1px solid #ffffff22;border-radius:20px;color:#d6e6dc}.c5 .t.on{background:#9fbfae;color:#1d2522;border-color:#9fbfae}
+/* 6 lavender gray outline minimal */
+.c6{background:#1f1e26}
+.c6 .b.p{background:#b9b3d9;color:#1f1e26}.c6 .b.s{border:1.5px solid #6a6685;color:#c9c5e6}
+.c6 .i{border:1.5px solid #4c4a63;border-radius:50%;color:#c9c5e6}.c6 .t{border:1.5px solid #4c4a63;border-radius:20px;color:#c9c5e6}.c6 .t.on{background:#b9b3d9;color:#1f1e26;border-color:#b9b3d9}
+/* 7 sand/mocha warm */
+.c7{background:#2b2520}
+.c7 .b.p{background:linear-gradient(#d9b88f,#c19f77);color:#2b2520;box-shadow:0 6px 14px #0005}.c7 .b.s{background:#3a322b;color:#e6d3b8;border:1px solid #4a4037}
+.c7 .i{background:#3a322b;border:1px solid #4a4037;border-radius:14px;color:#e6d3b8}.c7 .t{background:#3a322b;border:1px solid #4a4037;border-radius:20px;color:#e6d3b8}.c7 .t.on{background:#d9b88f;color:#2b2520}
+/* 8 light soft rounded (classic iOS-like) */
+.c8{background:#e9ecf1;color:#2d3340}
+.c8 .nm{color:#2d3340}
+.c8 .b.p{background:#8fa7d9;color:#fff;box-shadow:0 4px 10px #8fa7d955}.c8 .b.s{background:#fff;color:#4a5570;box-shadow:0 2px 6px #0000001a}
+.c8 .i{background:#fff;border-radius:50%;box-shadow:0 2px 6px #0000001a;color:#4a5570}.c8 .t{background:#fff;border-radius:20px;color:#4a5570;box-shadow:0 2px 6px #0000001a}.c8 .t.on{background:#8fa7d9;color:#fff}
+</style><body><div class="grid" id="g"></div><script>
+const S=(d,c='currentColor')=>`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const H=S('<path d="M12 21s-8-5.200-8-11a4.600 4.600 0 018-3 4.600 4.600 0 018 3c0 5.800-8 11-8 11z"/>'),C=S('<path d="M21 12a8.500 8.500 0 01-12.200 7.600L3.500 21l1.400-5A8.500 8.500 0 1121 12z"/>'),SD=S('<path d="M21 3L3 10l7 3 3 7zM10 13l11-10"/>'),BK=S('<path d="M6 3h12v18l-6-4-6 4z"/>'),PL=S('<path d="M12 5v14M5 12h14"/>');
+const names=['1 · ناعم غائر (Neumorphic) – رمادي ووردي هادئ','2 · وردي باهت مسطّح','3 · كلاسيكي بتدرّج أزرق رمادي','4 · ريترو بحدود وظل مقصوص (كريمي)','5 · أخضر مريمي زجاجي','6 · بنفسجي رمادي بحدود خفيفة','7 · رملي وموكا دافئ','8 · فاتح ناعم (أسلوب قديم أنيق)'];
+document.getElementById('g').innerHTML=names.map((n,k)=>`<div class="card c${k+1}"><div class="nm">${n}</div><div class="b p">دخول ومتابعة</div><div class="b s">إنشاء حساب</div><div class="r"><div class="i">${H}</div><div class="i">${C}</div><div class="i">${SD}</div><div class="i">${BK}</div><div class="i">${PL}</div></div><div class="r"><div class="t on">فيديوهاتي</div><div class="t">إعادة</div><div class="t">محفوظ</div></div></div>`).join('');
+</script></body></html>
