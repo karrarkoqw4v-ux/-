@@ -3,8 +3,9 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-// 10.0.2.2 = localhost من محاكي أندرويد. غيّره لعنوان السيرفر الحقيقي.
-const host = 'http://10.0.2.2:8080';
+// عنوان السيرفر: يتغيّر وقت البناء  --dart-define=API_HOST=http://IP:8080
+// الافتراضي 10.0.2.2 = localhost من محاكي أندرويد فقط.
+const host = String.fromEnvironment('API_HOST', defaultValue: 'http://10.0.2.2:8080');
 const apiBase = '$host/api';
 
 class ApiException implements Exception {
