@@ -39,6 +39,10 @@ func main() {
 	http.HandleFunc("POST /api/auth/register", cors(register))
 	http.HandleFunc("POST /api/auth/login", cors(login))
 	http.HandleFunc("POST /api/auth/forgot", cors(forgot))
+	http.HandleFunc("GET /api/conversations", requireAuth(listConversations))
+	http.HandleFunc("POST /api/conversations/start", requireAuth(startConversation))
+	http.HandleFunc("GET /api/conversations/{id}/messages", requireAuth(listMessages))
+	http.HandleFunc("POST /api/conversations/{id}/messages", requireAuth(sendMessage))
 	http.HandleFunc("GET /api/videos", cors(func(w http.ResponseWriter, r *http.Request) {
 		mu.Lock()
 		defer mu.Unlock()

@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 	"unicode/utf8"
 
 	"golang.org/x/crypto/bcrypt"
@@ -27,12 +28,13 @@ type User struct {
 type Store struct {
 	mu       sync.Mutex
 	path     string
-	Users    []User            `json:"users"`
-	Sessions map[string]string `json:"sessions"` // token -> user id
+	Users    []User                   `json:"users"`
+	Sessions map[string]string        `json:"sessions"` // token -> user id
+	Convs    map[string]*Conversation `json:"convs"`
 }
 
 var (
-	store      = &Store{path: "data.json", Sessions: map[string]string{}}
+	store      = &Store{path: "data.json", Sessions: map[string]string{}, Convs: map[string]*Conversation{}}
 	emailRe    = regexp.MustCompile(`^[^@\s]+@[^@\s]+\.[^@\s]+$`)
 	usernameRe = regexp.MustCompile(`^[a-z0-9_.]{3,20}$`)
 )
@@ -44,6 +46,14 @@ func (s *Store) load() {
 	}
 	if s.Sessions == nil {
 		s.Sessions = map[string]string{}
+	}
+	if s.Convs == nil {
+		s.Convs = map[string]*Conversation{}
+	}
+	for _, c := range s.Convs {
+		if c.ReadAt == nil {
+			c.ReadAt = map[string]time.Time{}
+		}
 	}
 }
 

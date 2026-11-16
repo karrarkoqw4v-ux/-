@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:video_player/video_player.dart';
 import 'api.dart';
+import 'chat_list_screen.dart';
 import 'profile_screen.dart';
 import 'theme.dart';
 
@@ -39,7 +40,7 @@ class _FeedScreenState extends State<FeedScreen> {
         extendBody: true,
         body: Stack(children: [
           Positioned.fill(
-            child: IndexedStack(index: _tab == 0 ? 0 : (_tab == 4 ? 2 : 1), children: [
+            child: IndexedStack(index: switch (_tab) { 0 => 0, 2 => 3, 4 => 2, _ => 1 }, children: [
               FutureBuilder<List<dynamic>>(
                 future: _videos,
                 builder: (c, s) {
@@ -53,6 +54,7 @@ class _FeedScreenState extends State<FeedScreen> {
               ),
               const Center(child: Text('قريباً', style: TextStyle(color: Colors.white70))),
               const ProfileScreen(),
+              const ChatListScreen(),
             ]),
           ),
           Positioned(left: 14, right: 14, bottom: 12 + MediaQuery.paddingOf(context).bottom, child: _NavBar(index: _tab, onTap: (i) => setState(() => _tab = i))),

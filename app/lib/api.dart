@@ -74,4 +74,45 @@ class Api {
     if (avatar != null) req.files.add(await http.MultipartFile.fromPath('avatar', avatar.path));
     await _saveSession(await _handle(await http.Response.fromStream(await req.send())));
   }
+
+  // ---- المحادثات: كل طلب يحتاج رمز الدخول ----
+
+  static Future<String> _token() async {
+    final t = (await SharedPreferences.getInstance()).getString('token');
+    if (t == null) throw ApiException('سجّل الدخول أولاً');
+    return t;
+  }
+
+  static Future<Map<String, String>> _authHeaders() async => {'Authorization': 'Bearer ${await _token()}', 'Content-Type': 'application/json'};
+
+  static dynamic _handleAny(http.Response r) {
+    final body = jsonDecode(utf8.decode(r.bodyBytes));
+    if (r.statusCode >= 400) {
+      final m = body as Map<String, dynamic>;
+      throw ApiException(m['error'] ?? 'صار خطأ', (m['field'] as String?)?.isEmpty == true ? null : m['field']);
+    }
+    return body;
+  }
+
+  /// قائمة المحادثات، كل عنصر فيه user, lastMessage, lastAt, unreadCount, id
+  static Future<List<dynamic>> conversations() async {
+    final r = await http.get(Uri.parse('$apiBase/conversations'), headers: await _authHeaders());
+    return _handleAny(r) as List<dynamic>;
+  }
+
+  /// يبدأ محادثة مع يوزر، أو يرجّع الموجودة
+  static Future<Map<String, dynamic>> startConversation(String username) async {
+    final r = await http.post(Uri.parse('$apiBase/conversations/start'), headers: await _authHeaders(), body: jsonEncode({'username': username}));
+    return _handleAny(r) as Map<String, dynamic>;
+  }
+
+  static Future<List<dynamic>> messages(String convId) async {
+    final r = await http.get(Uri.parse('$apiBase/conversations/$convId/messages'), headers: await _authHeaders());
+    return _handleAny(r) as List<dynamic>;
+  }
+
+  static Future<Map<String, dynamic>> sendMessage(String convId, String text) async {
+    final r = await http.post(Uri.parse('$apiBase/conversations/$convId/messages'), headers: await _authHeaders(), body: jsonEncode({'text': text}));
+    return _handleAny(r) as Map<String, dynamic>;
+  }
 }
