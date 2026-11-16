@@ -15,12 +15,15 @@ ThemeData buildTheme() => ThemeData(
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: fieldFill,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: brand, width: 1.6)),
-        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFFFB84D))),
-        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFFFB84D), width: 1.6)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        hintStyle: const TextStyle(color: Color(0xB3FFFFFF), fontSize: 14),
+        prefixIconColor: const Color(0xB3FFFFFF),
+        suffixIconColor: const Color(0xB3FFFFFF),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: brand, width: 1.6)),
+        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFFFB84D))),
+        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFFFB84D), width: 1.6)),
       ),
     );
 
@@ -32,11 +35,11 @@ class GradientButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SizedBox(
         width: double.infinity,
-        height: 54,
+        height: 48,
         child: DecoratedBox(
           decoration: BoxDecoration(
             gradient: const LinearGradient(colors: [brand, brand]),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(14),
             boxShadow: [BoxShadow(color: brand.withOpacity(.35), blurRadius: 18, offset: const Offset(0, 8))],
           ),
           child: ElevatedButton(
@@ -44,11 +47,11 @@ class GradientButton extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.transparent,
               shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             ),
             child: loading
                 ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white))
-                : Text(text, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
+                : Text(text, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
           ),
         ),
       );
@@ -59,21 +62,21 @@ class AuthLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(children: [
         Container(
-          width: 76,
-          height: 76,
+          width: 64,
+          height: 64,
           decoration: BoxDecoration(
             color: Colors.black,
             border: Border.all(color: Colors.white12),
             borderRadius: BorderRadius.circular(24),
           ),
           child: Stack(alignment: Alignment.center, children: [
-            Transform(transform: Matrix4Translate.shift(-2.5, -2.5), child: const Icon(Icons.groups_rounded, size: 42, color: cyan)),
-            Transform(transform: Matrix4Translate.shift(2.5, 2.5), child: const Icon(Icons.groups_rounded, size: 42, color: brand)),
-            Icon(Icons.groups_rounded, size: 42, color: Colors.white),
+            Transform(transform: Matrix4Translate.shift(-2.5, -2.5), child: const Icon(Icons.groups_rounded, size: 34, color: cyan)),
+            Transform(transform: Matrix4Translate.shift(2.5, 2.5), child: const Icon(Icons.groups_rounded, size: 34, color: brand)),
+            Icon(Icons.groups_rounded, size: 34, color: Colors.white),
           ]),
         ),
-        const SizedBox(height: 14),
-        const Text('جماعتكم', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 10),
+        const Text('جماعتكم', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
       ]);
 }
 

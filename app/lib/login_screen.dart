@@ -44,7 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 key: _form,
                 child: Column(children: [
                   const AuthLogo(),
-                  const SizedBox(height: 36),
+                  const SizedBox(height: 28),
                   TextFormField(
                     controller: _email,
                     keyboardType: TextInputType.emailAddress,
@@ -52,7 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     decoration: const InputDecoration(hintText: 'البريد الإلكتروني', prefixIcon: Icon(Icons.mail_outline)),
                     validator: (v) => RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v?.trim() ?? '') ? null : 'اكتب بريد إلكتروني صحيح',
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 10),
                   TextFormField(
                     controller: _pass,
                     obscureText: _hide,
@@ -68,17 +68,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     alignment: AlignmentDirectional.centerStart,
                     child: TextButton(
                       onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ForgotScreen())),
-                      child: const Text('نسيت كلمة السر؟'),
+                      child: const Text('نسيت كلمة السر؟', style: TextStyle(fontSize: 13, color: Colors.white70)),
                     ),
                   ),
                   if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 10), child: Text(_error!, style: const TextStyle(color: Color(0xFFFFB84D)))),
                   GradientButton(text: 'دخول ومتابعة', loading: _loading, onPressed: _submit),
-                  const SizedBox(height: 22),
+                  const SizedBox(height: 14),
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    const Text('ما عندك حساب؟'),
+                    const Text('ما عندك حساب؟', style: TextStyle(fontSize: 13, color: Colors.white70)),
                     TextButton(
                       onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen())),
-                      child: const Text('إنشاء حساب', style: TextStyle(fontWeight: FontWeight.bold, color: brand)),
+                      child: const Text('إنشاء حساب', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: brand)),
                     ),
                   ]),
                 ]),

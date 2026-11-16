@@ -29,17 +29,17 @@ class _ForgotScreenState extends State<ForgotScreen> {
         body: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('نسيت كلمة السر؟', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
+            const Text('نسيت كلمة السر؟', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
             const SizedBox(height: 8),
-            const Text('اكتب بريدك وراح نرسل لك رابط إعادة التعيين', style: TextStyle(color: Colors.white60)),
-            const SizedBox(height: 28),
+            const Text('اكتب بريدك وراح نرسل لك رابط إعادة التعيين', style: TextStyle(fontSize: 13, color: Colors.white70)),
+            const SizedBox(height: 22),
             TextField(
               controller: _email,
               keyboardType: TextInputType.emailAddress,
               textDirection: TextDirection.ltr,
               decoration: const InputDecoration(hintText: 'البريد الإلكتروني', prefixIcon: Icon(Icons.mail_outline)),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 14),
             if (_sent) const Padding(padding: EdgeInsets.only(bottom: 14), child: Text('تم الإرسال إذا كان البريد مسجّلاً ✓', style: TextStyle(color: Colors.greenAccent))),
             GradientButton(text: 'إرسال الرابط', loading: _loading, onPressed: _send),
             const SizedBox(height: 10),
