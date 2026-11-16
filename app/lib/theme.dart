@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
-const brand = Color(0xFF7C4DFF);
-const brandDark = Color(0xFF5B2EE6);
-const bgDark = Color(0xFF0E0B1F);
-const fieldFill = Color(0xFF1A1633);
+const brand = Color(0xFFFE2C55); // أحمر تيك توك
+const cyan = Color(0xFF25F4EE); // سماوي تيك توك
+const brandDark = Color(0xFFD91E46);
+const bgDark = Color(0xFF000000);
+const fieldFill = Color(0xFF1F1F23);
 
 ThemeData buildTheme() => ThemeData(
+      // بدون fontFamily = خط النظام الأصلي (Roboto + خط العربي الافتراضي بأندرويد)
       brightness: Brightness.dark,
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(seedColor: brand, brightness: Brightness.dark),
@@ -17,8 +19,8 @@ ThemeData buildTheme() => ThemeData(
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: brand, width: 1.6)),
-        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFFF5C7A))),
-        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFFF5C7A), width: 1.6)),
+        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFFFB84D))),
+        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFFFB84D), width: 1.6)),
       ),
     );
 
@@ -33,7 +35,7 @@ class GradientButton extends StatelessWidget {
         height: 54,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [brand, Color(0xFFB388FF)]),
+            gradient: const LinearGradient(colors: [brand, brand]),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [BoxShadow(color: brand.withOpacity(.35), blurRadius: 18, offset: const Offset(0, 8))],
           ),
@@ -60,12 +62,21 @@ class AuthLogo extends StatelessWidget {
           width: 76,
           height: 76,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [brand, Color(0xFFFF6FB5)], begin: Alignment.topRight, end: Alignment.bottomLeft),
+            color: Colors.black,
+            border: Border.all(color: Colors.white12),
             borderRadius: BorderRadius.circular(24),
           ),
-          child: const Icon(Icons.groups_rounded, size: 42, color: Colors.white),
+          child: Stack(alignment: Alignment.center, children: [
+            Transform(transform: Matrix4Translate.shift(-2.5, -2.5), child: const Icon(Icons.groups_rounded, size: 42, color: cyan)),
+            Transform(transform: Matrix4Translate.shift(2.5, 2.5), child: const Icon(Icons.groups_rounded, size: 42, color: brand)),
+            Icon(Icons.groups_rounded, size: 42, color: Colors.white),
+          ]),
         ),
         const SizedBox(height: 14),
         const Text('جماعتكم', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800)),
       ]);
+}
+
+class Matrix4Translate {
+  static Matrix4 shift(double x, double y) => Matrix4.translationValues(x, y, 0);
 }

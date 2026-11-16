@@ -126,7 +126,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     helperStyle: const TextStyle(color: Colors.greenAccent),
                     suffixIcon: _checking
                         ? const Padding(padding: EdgeInsets.all(14), child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)))
-                        : _userOk ? const Icon(Icons.check_circle, color: Colors.greenAccent) : (_userError != null ? const Icon(Icons.cancel, color: Color(0xFFFF5C7A)) : null),
+                        : _userOk ? const Icon(Icons.check_circle, color: Colors.greenAccent) : (_userError != null ? const Icon(Icons.cancel, color: Color(0xFFFFB84D)) : null),
                   ),
                   validator: (v) => (v ?? '').trim().isEmpty ? 'اكتب اسم المستخدم' : null,
                 ),
@@ -151,7 +151,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   validator: (v) => (v ?? '').length >= 8 ? null : 'كلمة السر 8 أحرف على الأقل',
                 ),
                 const SizedBox(height: 22),
-                if (_serverError != null) Padding(padding: const EdgeInsets.only(bottom: 10), child: Text(_serverError!, style: const TextStyle(color: Color(0xFFFF5C7A)))),
+                if (_serverError != null) Padding(padding: const EdgeInsets.only(bottom: 10), child: Text(_serverError!, style: const TextStyle(color: Color(0xFFFFB84D)))),
                 GradientButton(text: 'إنشاء ومتابعة', loading: _loading, onPressed: _submit),
                 const SizedBox(height: 14),
                 TextButton(onPressed: () => Navigator.pop(context), child: const Text('رجوع لتسجيل الدخول', style: TextStyle(color: brand))),

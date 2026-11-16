@@ -71,7 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: const Text('نسيت كلمة السر؟'),
                     ),
                   ),
-                  if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 10), child: Text(_error!, style: const TextStyle(color: Color(0xFFFF5C7A)))),
+                  if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 10), child: Text(_error!, style: const TextStyle(color: Color(0xFFFFB84D)))),
                   GradientButton(text: 'دخول ومتابعة', loading: _loading, onPressed: _submit),
                   const SizedBox(height: 22),
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
