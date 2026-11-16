@@ -1,0 +1,78 @@
+<!doctype html><html><meta charset="utf-8">
+<style>
+*{box-sizing:border-box;margin:0}
+html{width:390px;height:844px;overflow:hidden}
+body{width:390px;height:844px;font-family:system-ui,"Noto Naskh Arabic","Noto Sans Arabic",sans-serif;color:#fff;background:#000;position:relative;overflow:hidden}
+#ph{position:absolute;inset:0;overflow:hidden;direction:rtl}
+.st{position:absolute;top:0;left:0;right:0;height:34px;display:flex;justify-content:space-between;padding:10px 22px;font-size:13px;direction:ltr;z-index:9}
+.light .st{color:#111}
+.scr{position:absolute;inset:0;padding:64px 24px 24px;display:flex;flex-direction:column}
+.fld{height:50px;border-radius:14px;display:flex;align-items:center;gap:10px;padding:0 14px;margin-bottom:10px;font-size:14px;background:#1F1F23;color:#ffffffb3;border:1.5px solid transparent}
+.fld svg{flex:none}.fld span{flex:1}
+.btn{height:48px;border-radius:14px;background:#FE2C55;display:grid;place-items:center;font-weight:700;font-size:15px;color:#fff}
+.lnk{font-size:13px;color:#ffffffb3}.red{color:#FE2C55;font-weight:700}
+.logo{width:64px;height:64px;border-radius:20px;background:#000;border:1px solid #ffffff22;display:grid;place-items:center}
+h1{font-weight:800}
+/* A */
+.glowA{position:absolute;width:320px;height:320px;border-radius:50%;filter:blur(90px)}
+/* B hero */
+.heroB{position:absolute;top:0;left:0;right:0;height:560px;-webkit-mask:linear-gradient(#000 55%,transparent);background:radial-gradient(circle at 70% 20%,#FE2C5566,transparent 55%),radial-gradient(circle at 20% 60%,#25F4EE44,transparent 50%),#0a0a0c}
+.cardB{position:absolute;bottom:0;left:0;right:0;background:#161618;border-radius:30px 30px 0 0;padding:26px 24px 30px;border-top:1px solid #ffffff14}
+/* C light */
+.light{background:#fff;color:#111}
+.light .fld{background:#F1F1F2;color:#16182399}
+.light .lnk{color:#161823a0}
+/* D minimal */
+.fldD{border-bottom:1.5px solid #ffffff33;padding:12px 2px;display:flex;align-items:center;gap:10px;margin-bottom:18px;color:#ffffffb3;font-size:15px}
+.fldD.f{border-color:#FE2C55;color:#fff}
+/* E glass */
+.tiles{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:6px;opacity:.55;transform:scale(1.15) rotate(-6deg)}
+.tiles i{border-radius:14px}
+.glass{position:absolute;left:18px;right:18px;top:50%;transform:translateY(-44%);background:#0c0c0fcc;backdrop-filter:blur(14px);border:1px solid #ffffff1f;border-radius:26px;padding:26px 20px}
+.fldE{background:#ffffff14;border:1px solid #ffffff1a}
+/* crop variants */
+.bar{display:flex;justify-content:space-between;align-items:center;height:48px}
+.ico{width:38px;height:38px;border-radius:50%;background:#ffffff14;display:grid;place-items:center}
+.stage{position:relative;border-radius:22px;overflow:hidden;background:linear-gradient(160deg,#355c7d,#6c5b7b,#c06c84)}
+.hole{position:absolute;inset:0}
+.ring{position:absolute;border:2px solid #fff}
+.sl{height:4px;border-radius:2px;background:#ffffff33;position:relative;flex:1}.sl b{position:absolute;right:0;top:0;bottom:0;width:60%;background:#FE2C55;border-radius:2px}.sl u{position:absolute;right:60%;top:-7px;width:18px;height:18px;border-radius:50%;background:#fff;margin-right:-9px}
+.chip{padding:8px 16px;border-radius:20px;background:#ffffff14;font-size:13px}.chip.on{background:#FE2C55}
+</style><body><div id="ph"></div>
+<script>
+const P=(d,c='#fff',w=22)=>`<svg width="${w}" height="${w}" viewBox="0 0 22 22" fill="none" stroke="${c}" stroke-width="1.8">${d}</svg>`;
+const D={mail:'<rect x="2" y="4" width="18" height="14" rx="3"/><path d="M3 6l8 6 8-6"/>',lock:'<rect x="4" y="10" width="14" height="9" rx="2"/><path d="M7 10V7a4 4 0 018 0v3"/>',eye:'<path d="M1 11s4-7 10-7 10 7 10 7-4 7-10 7S1 11 1 11z"/><circle cx="11" cy="11" r="3"/>',rot:'<path d="M4 8a8 8 0 1112 9M4 3v5h5"/>',x:'<path d="M5 5l12 12M17 5L5 17"/>',chk:'<path d="M4 11l5 5 9-10"/>',flip:'<path d="M11 2v18M7 6L2 11l5 5zM15 6l5 5-5 5z"/>'};
+const ic=(k,c)=>P(D[k],c||'#ffffffb3');
+const g='<circle cx="22" cy="14" r="7"/><circle cx="9" cy="19" r="5" opacity=".8"/><circle cx="35" cy="19" r="5" opacity=".8"/><path d="M8 38c1-9 7-12 14-12s13 3 14 12z"/>';
+const lg=(s=40,main='#fff')=>`<svg width="${s}" height="${s}" viewBox="0 0 44 44" style="overflow:visible"><g fill="#25F4EE" transform="translate(-2.2,-2.2)">${g}</g><g fill="#FE2C55" transform="translate(2.2,2.2)">${g}</g><g fill="${main}">${g}</g></svg>`;
+const st=`<div class="st"><span>9:41</span><span>▂▄▆ 100%</span></div>`;
+const V={
+A:`${st}<div class="glowA" style="background:#25F4EE;opacity:.18;top:-120px;right:-100px"></div><div class="glowA" style="background:#FE2C55;opacity:.28;bottom:-140px;left:-120px"></div>
+<div class="scr" style="justify-content:center;padding-bottom:90px"><div style="text-align:center;margin-bottom:26px;display:flex;flex-direction:column;align-items:center"><div class="logo">${lg()}</div><h1 style="font-size:24px;margin-top:10px">جماعتكم</h1><div class="lnk" style="font-size:12px">مقاطعك، جماعتك</div></div>
+<div class="fld">${ic('mail')}<span>البريد الإلكتروني</span></div><div class="fld">${ic('lock')}<span>كلمة السر</span>${ic('eye')}</div><div class="lnk" style="margin:0 4px 14px">نسيت كلمة السر؟</div><div class="btn">دخول ومتابعة</div><div class="lnk" style="text-align:center;margin-top:14px">ما عندك حساب؟ <span class="red">إنشاء حساب</span></div></div>`,
+B:`${st}<div class="heroB"></div><div style="position:absolute;top:110px;left:0;right:0;text-align:center;display:flex;flex-direction:column;align-items:center"><div class="logo" style="width:84px;height:84px;border-radius:26px">${lg(52)}</div><h1 style="font-size:28px;margin-top:14px">جماعتكم</h1><div class="lnk" style="margin-top:4px">أهلاً بعودتك 👋</div></div>
+<div class="cardB"><div style="font-size:18px;font-weight:800;margin-bottom:16px">تسجيل الدخول</div><div class="fld" style="background:#242428">${ic('mail')}<span>البريد الإلكتروني</span></div><div class="fld" style="background:#242428">${ic('lock')}<span>كلمة السر</span>${ic('eye')}</div><div class="lnk" style="margin:0 4px 16px;color:#FE2C55">نسيت كلمة السر؟</div><div class="btn">دخول ومتابعة</div><div style="height:1px;background:#ffffff14;margin:18px 0 14px"></div><div class="lnk" style="text-align:center">ما عندك حساب؟ <span class="red">إنشاء حساب</span></div></div>`,
+C:`<div class="light" style="position:absolute;inset:0;background:#fff">${st}<div class="scr" style="justify-content:center;padding-bottom:80px"><div style="text-align:center;margin-bottom:28px;display:flex;flex-direction:column;align-items:center"><div class="logo" style="background:#000">${lg()}</div><h1 style="font-size:24px;margin-top:10px;color:#161823">جماعتكم</h1><div class="lnk" style="font-size:12px">سجّل دخولك وكمّل</div></div>
+<div class="fld">${ic('mail','#16182399')}<span>البريد الإلكتروني</span></div><div class="fld">${ic('lock','#16182399')}<span>كلمة السر</span>${ic('eye','#16182399')}</div><div class="lnk" style="margin:0 4px 14px">نسيت كلمة السر؟</div><div class="btn">دخول ومتابعة</div></div>
+<div style="position:absolute;bottom:0;left:0;right:0;height:64px;border-top:1px solid #1618231f;display:flex;gap:6px;justify-content:center;align-items:center;font-size:13px;color:#161823a0;background:#fff">ما عندك حساب؟ <span class="red">إنشاء حساب</span></div></div>`,
+D:`${st}<div class="scr" style="padding-top:90px"><div class="logo" style="width:56px;height:56px;border-radius:18px">${lg(34)}</div><h1 style="font-size:30px;margin:22px 0 6px">أهلاً بك</h1><div class="lnk" style="margin-bottom:44px">سجّل دخولك للمتابعة في جماعتكم</div>
+<div class="fldD f">${ic('mail','#FE2C55')}<span style="flex:1">karrar@example.com</span></div><div class="fldD">${ic('lock')}<span style="flex:1">كلمة السر</span>${ic('eye')}</div><div class="lnk" style="margin:-4px 0 40px;color:#FE2C55">نسيت كلمة السر؟</div><div class="btn" style="border-radius:30px;height:50px">دخول ومتابعة</div><div style="flex:1"></div><div class="lnk" style="text-align:center;padding-bottom:20px">ما عندك حساب؟ <span class="red">إنشاء حساب</span></div></div>`,
+E:`${st}<div class="tiles">${['#355c7d,#c06c84','#FE2C55,#25F4EE','#0f2027,#2c5364','#f09819,#ff512f','#4776E6,#8E54E9','#134e5e,#71b280','#833ab4,#fd1d1d','#232526,#414345','#ff9a9e,#fad0c4'].map(c=>`<i style="background:linear-gradient(160deg,${c});height:230px"></i>`).join('')}</div><div style="position:absolute;inset:0;background:linear-gradient(#000a,#000d)"></div>
+<div class="glass"><div style="text-align:center;margin-bottom:20px;display:flex;flex-direction:column;align-items:center"><div class="logo">${lg()}</div><h1 style="font-size:22px;margin-top:10px">جماعتكم</h1></div>
+<div class="fld fldE">${ic('mail')}<span>البريد الإلكتروني</span></div><div class="fld fldE">${ic('lock')}<span>كلمة السر</span>${ic('eye')}</div><div class="lnk" style="margin:0 4px 14px">نسيت كلمة السر؟</div><div class="btn">دخول ومتابعة</div><div class="lnk" style="text-align:center;margin-top:14px">ما عندك حساب؟ <span class="red">إنشاء حساب</span></div></div>`,
+/* crop designs */
+crop1:`${st}<div class="scr" style="padding-top:50px;background:#000"><div class="bar"><div class="ico">${ic('x','#fff')}</div><b style="font-size:16px">تحديد الصورة</b><div style="width:38px"></div></div>
+<div class="stage" style="flex:1;margin:10px 0 14px"><div class="hole" style="background:radial-gradient(circle 138px at 50% 50%,transparent 136px,#000b 138px)"></div><div class="ring" style="left:50%;top:50%;width:274px;height:274px;margin:-137px;border-radius:50%"></div></div>
+<div style="text-align:center;color:#ffffffb3;font-size:12px;margin-bottom:12px">حرّك الصورة وكبّرها داخل الدائرة</div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">${ic('flip','#ffffffb3')}<div class="sl"><b></b><u></u></div></div>
+<div style="display:flex;gap:10px"><div class="btn" style="flex:1;background:#ffffff14">إلغاء</div><div class="btn" style="flex:2">موافق</div></div></div>`,
+crop2:`${st}<div class="scr" style="padding-top:50px;background:#0a0a0c"><div class="bar"><div class="ico">${ic('x','#fff')}</div><b style="font-size:16px">قص الصورة</b><div class="ico" style="background:#FE2C55">${ic('chk','#fff')}</div></div>
+<div style="display:flex;justify-content:center;margin:8px 0 14px;align-items:center;gap:12px"><div style="width:58px;height:58px;border-radius:50%;background:linear-gradient(160deg,#355c7d,#c06c84);border:2px solid #FE2C55"></div><div><div style="font-size:13px;font-weight:700">هكذا راح تظهر صورتك</div><div class="lnk" style="font-size:11px">512×512 · مربع ثابت</div></div></div>
+<div class="stage" style="width:342px;height:342px;align-self:center"><div style="position:absolute;inset:36px;border:2px solid #fff;border-radius:16px;box-shadow:0 0 0 400px #000a"></div><div style="position:absolute;inset:36px;background:linear-gradient(#fff3 1px,transparent 1px) 0 33%/100% 33.3%,linear-gradient(90deg,#fff3 1px,transparent 1px) 33%/33.3% 100%"></div></div>
+<div style="flex:1"></div><div style="display:flex;justify-content:center;gap:10px;margin-bottom:16px"><div class="chip on">1:1</div><div class="chip">${ic('rot')}</div><div class="chip">${ic('flip')}</div></div><div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">${ic('flip','#ffffffb3')}<div class="sl"><b></b><u></u></div></div><div class="btn">موافق</div></div>`,
+crop3:`${st}<div style="position:absolute;inset:0;background:linear-gradient(160deg,#355c7d,#6c5b7b,#c06c84)"></div><div style="position:absolute;inset:0;background:radial-gradient(circle 150px at 50% 330px,transparent 148px,#000c 150px)"></div><div class="ring" style="left:50%;top:330px;width:300px;height:300px;margin:-150px;border-radius:50%"></div>
+<div style="position:absolute;top:50px;left:20px;right:20px" class="bar"><div class="ico" style="background:#0008">${ic('x','#fff')}</div><b style="font-size:16px">حدد صورتك</b><div style="width:38px"></div></div>
+<div style="position:absolute;bottom:0;left:0;right:0;background:#111113;border-radius:26px 26px 0 0;padding:18px 22px 28px"><div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><span style="font-size:12px;color:#ffffffb3">تكبير</span><div class="sl"><b></b><u></u></div></div><div style="display:flex;gap:10px"><div class="btn" style="flex:1;background:#ffffff14">إلغاء</div><div class="btn" style="flex:2">موافق</div></div></div>`,
+};
+document.getElementById('ph').innerHTML=V[location.hash.slice(1)];
+</script></body></html>
