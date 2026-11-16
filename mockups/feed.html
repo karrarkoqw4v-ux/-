@@ -1,0 +1,59 @@
+<!doctype html><html><meta charset="utf-8">
+<style>
+*{box-sizing:border-box;margin:0}
+body{font-family:system-ui,"Noto Naskh Arabic","Noto Sans Arabic",sans-serif;color:#fff;background:#0b0b0d;direction:rtl}
+.vid{position:relative;overflow:hidden;background:linear-gradient(160deg,#355c7d,#6c5b7b 50%,#c06c84)}
+.vid:before{content:"";position:absolute;width:200px;height:260px;border-radius:50%;background:#1b2a49;left:20%;top:30%;filter:blur(30px)}
+.vid:after{content:"";position:absolute;inset:0;background:linear-gradient(#0000 55%,#000a)}
+.lab{position:absolute;top:6px;right:8px;font-size:11px;background:#000a;padding:2px 8px;border-radius:10px;z-index:9;direction:ltr}
+.nav{position:absolute;left:0;right:0;bottom:0;z-index:5;display:flex;align-items:center;justify-content:space-around}
+.nav i{font-style:normal;display:grid;place-items:center;position:relative}
+.dot{position:absolute;top:-2px;left:-3px;width:10px;height:10px;border-radius:50%;background:#FE2C55;border:2px solid #000}
+.av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#ffb88c,#de6262);border:2px solid #fff}
+.rail{position:absolute;z-index:5;display:flex;flex-direction:column;align-items:center}
+.rail .it{display:flex;flex-direction:column;align-items:center;font-size:11px;font-weight:600;gap:3px}
+</style><body><div id="r"></div><script>
+const P={
+heart:'<path d="M12 21s-8-5.2-8-11a4.6 4.6 0 018-3 4.6 4.6 0 018 3c0 5.800-8 11-8 11z"/>',
+cmt:'<path d="M21 12a8.500 8.500 0 01-12.200 7.600L3.500 21l1.400-5A8.500 8.500 0 1121 12z"/>',
+rep:'<path d="M4 11V9a3 3 0 013-3h11M15 3l3 3-3 3M20 13v2a3 3 0 01-3 3H6M9 21l-3-3 3-3"/>',
+send:'<path d="M21 3L3 10l7 3 3 7zM10 13l11-10"/>',
+save:'<path d="M6 3h12v18l-6-4-6 4z"/>',
+more:'<path d="M5 8h14M5 12h14M5 16h9"/>',
+search:'<circle cx="11" cy="11" r="7"/><path d="M16.500 16.500L21 21"/>',
+home:'<path d="M3 11l9-8 9 8v10h-6v-6H9v6H3z"/>',
+reel:'<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M10 8.500v7l6-3.500z"/>',
+plus:'<path d="M12 5v14M5 12h14"/>',
+user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 5-7 8-7s7 2 8 7"/>',
+msg:'<path d="M21 3L3 10l7 3 3 7z"/>'};
+const I=(k,{s=26,c='#fff',f='none',w=2}={})=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="${f}" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${P[k]}</svg>`;
+const R='#FE2C55',C='#25F4EE';
+const lg='<circle cx="22" cy="14" r="7"/><circle cx="9" cy="19" r="5"/><circle cx="35" cy="19" r="5"/><path d="M8 38c1-9 7-12 14-12s13 3 14 12z"/>';
+const nums={heart:'١٦٤ ألف',cmt:'٦٬٣٦٣',rep:'٣٬٥٨٢',send:'٣١٥ ألف',save:'١١٫٢ ألف'};
+/* ---------- NAV ---------- */
+const NAV={
+N1:`<div class="nav" style="height:64px;background:#0d0f13;border-top:1px solid #ffffff14"><i><div class="av"></div></i><i>${I('search')}</i><i>${I('msg')}<b class="dot"></b></i><i>${I('reel')}</i><i>${I('home',{f:'#fff'})}</i></div>`,
+N2:`<div class="nav" style="bottom:12px;left:14px;right:14px;height:62px;border-radius:32px;background:#16161aee;border:1px solid #ffffff1a;box-shadow:0 10px 30px #000a;padding:0 10px"><i><div class="av"></div></i><i>${I('search')}</i><i>${I('msg')}<b class="dot"></b></i><i>${I('reel')}</i><i style="width:46px;height:46px;border-radius:50%;background:${R};box-shadow:0 6px 16px ${R}88">${I('home',{f:'#fff',s:24})}</i></div>`,
+N3:`<div class="nav" style="height:72px;background:#000;border-top:1px solid #ffffff14;align-items:flex-end;padding-bottom:12px"><i>${I('home',{f:'#fff'})}</i><i>${I('search')}</i><i style="width:54px;height:36px;margin-bottom:2px"><span style="position:absolute;inset:0;border-radius:11px;background:${C};transform:translateX(-4px)"></span><span style="position:absolute;inset:0;border-radius:11px;background:${R};transform:translateX(4px)"></span><span style="position:absolute;inset:0;border-radius:11px;background:#fff;display:grid;place-items:center">${I('plus',{c:'#000',s:22,w:2.800})}</span></i><i>${I('msg')}<b class="dot"></b></i><i><div class="av"></div></i></div>`,
+N4:`<div class="nav" style="height:70px;background:#0d0d10;border-top:1px solid #ffffff14;padding-top:4px">${[['user','أنا'],['msg','الرسائل'],['reel','ريلز'],['search','استكشاف'],['home','الرئيسية']].map(([k,t],n)=>`<i style="gap:3px;height:100%;justify-content:center;opacity:${n==4?1:.65}">${n==4?'<span style="position:absolute;top:-4px;width:28px;height:3px;border-radius:2px;background:'+R+'"></span>':''}${I(k,{s:23,f:n==4?'#fff':'none'})}<span style="font-size:10px;font-weight:${n==4?800:500}">${t}</span>${k=='msg'?'<b class="dot" style="top:10px;left:10px"></b>':''}</i>`).join('')}</div>`,
+N5:`<div class="nav" style="height:84px;background:linear-gradient(#0000,#000d 60%);align-items:flex-end;padding-bottom:14px"><i><div class="av"></div></i><i>${I('search',{w:2.200})}</i><i>${I('msg',{w:2.200})}<b class="dot"></b></i><i>${I('reel',{w:2.200})}</i><i>${I('home',{f:'#fff',w:2.200})}<span style="position:absolute;bottom:-9px;width:5px;height:5px;border-radius:50%;background:${R}"></span></i></div>`,
+N6:`<div class="nav" style="height:66px;background:#101014;border-radius:26px 26px 0 0;border-top:1px solid #ffffff1a">${[['user'],['search'],['msg'],['reel'],['home']].map(([k],n)=>n==2?`<i style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,${R},#ff6b8a);margin-top:-30px;border:5px solid #000;box-shadow:0 8px 20px ${R}77">${I('msg',{f:'#fff',s:24})}</i>`:`<i>${k=='user'?'<div class="av"></div>':I(k,{c:'#ffffffb3'})}</i>`).join('')}</div>`,
+};
+/* ---------- RAIL ---------- */
+const row=(k,fn)=>['heart','cmt','rep','send','save'].map(fn).join('');
+const RAIL={
+R1:`<div class="rail" style="left:10px;bottom:90px;gap:20px">${['heart','cmt','rep','send','save'].map(k=>`<div class="it">${I(k,{s:30})}<span>${nums[k]}</span></div>`).join('')}<div class="it">${I('more')}</div></div>`,
+R2:`<div class="rail" style="left:10px;bottom:90px;gap:14px">${['heart','cmt','rep','send','save'].map(k=>`<div class="it"><div style="width:48px;height:48px;border-radius:50%;background:#00000066;backdrop-filter:blur(8px);border:1px solid #ffffff22;display:grid;place-items:center">${I(k,{s:24,c:k=='heart'?R:'#fff',f:k=='heart'?R:'none'})}</div><span>${nums[k]}</span></div>`).join('')}</div>`,
+R3:`<div class="rail" style="left:10px;bottom:90px;padding:14px 8px;gap:16px;border-radius:30px;background:#000000770;border:1px solid #ffffff1c;backdrop-filter:blur(10px)">${['heart','cmt','rep','send','save'].map(k=>`<div class="it">${I(k,{s:25,c:k=='heart'?R:'#fff',f:k=='heart'?R:'none'})}<span style="font-size:10px">${nums[k]}</span></div>`).join('')}</div>`,
+R4:`<div class="rail" style="left:10px;bottom:90px;gap:16px"><div style="position:relative;margin-bottom:6px"><div class="av" style="width:50px;height:50px;border-width:2px"></div><div style="position:absolute;bottom:-9px;left:15px;width:20px;height:20px;border-radius:50%;background:${R};display:grid;place-items:center">${I('plus',{s:12,w:3.500})}</div></div>${['heart','cmt','rep','send','save'].map(k=>`<div class="it">${I(k,{s:31,c:k=='heart'?R:'#fff',f:k=='heart'?R:'none'})}<span>${nums[k]}</span></div>`).join('')}</div>`,
+R5:`<div class="rail" style="left:10px;bottom:90px;gap:18px">${['heart','cmt','rep','send','save'].map(k=>`<div class="it" style="position:relative"><div style="width:46px;height:46px;border-radius:16px;background:#ffffff1f;border:1px solid #ffffff26;display:grid;place-items:center">${I(k,{s:23})}</div><span style="position:absolute;top:-8px;right:-10px;background:${k=='heart'?R:'#000c'};padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700;border:1px solid #ffffff22">${nums[k]}</span></div>`).join('')}</div>`,
+R6:`<div class="rail" style="left:10px;bottom:90px;gap:16px">${['heart','cmt','rep','send','save'].map((k,n)=>{const c=n%2?C:R;return `<div class="it"><div style="width:48px;height:48px;border-radius:50%;border:2px solid ${c};box-shadow:0 0 14px ${c}88,inset 0 0 10px ${c}44;display:grid;place-items:center;background:#0008">${I(k,{s:23,c})}</div><span>${nums[k]}</span></div>`}).join('')}</div>`,
+};
+const h=location.hash.slice(1);
+const box=(cls,body,w,hh,l)=>`<div class="vid" style="width:${w}px;height:${hh}px;display:inline-block;margin:0">${body}<span class="lab">${l}</span></div>`;
+let out='';
+if(h=='navsheet'){out='<div style="direction:ltr;display:grid;grid-template-columns:repeat(2,390px);gap:10px;padding:10px;width:810px">'+Object.keys(NAV).map(k=>box('',NAV[k],390,170,k)).join('')+'</div>';}
+else if(h=='railsheet'){out='<div style="direction:ltr;display:grid;grid-template-columns:repeat(3,230px);gap:10px;padding:10px;width:730px">'+Object.keys(RAIL).map(k=>box('',RAIL[k].replace(/bottom:90px/,'bottom:30px'),230,560,k)).join('')+'</div>';}
+else if(h.startsWith('full')){const [n,r]=h.slice(4).split('_');out=box('',RAIL[r]+NAV[n]+`<div style="position:absolute;right:14px;bottom:${n=='N2'?96:84}px;z-index:5;max-width:230px"><b>@karrar_ali</b><div style="font-size:13px;margin-top:4px;color:#ffffffe6">أول فيديو في جماعتكم 🔥</div></div>`,390,844,n+' + '+r);}
+document.getElementById('r').innerHTML=out;
+</script></body></html>
