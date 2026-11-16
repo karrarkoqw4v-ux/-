@@ -31,7 +31,8 @@ class GradientButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
   final bool loading;
-  const GradientButton({super.key, required this.text, this.onPressed, this.loading = false});
+  final bool pill; // زر دائري بالكامل
+  const GradientButton({super.key, required this.text, this.onPressed, this.loading = false, this.pill = false});
   @override
   Widget build(BuildContext context) => SizedBox(
         width: double.infinity,
@@ -39,7 +40,7 @@ class GradientButton extends StatelessWidget {
         child: DecoratedBox(
           decoration: BoxDecoration(
             gradient: const LinearGradient(colors: [brand, brand]),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(pill ? 30 : 14),
             boxShadow: [BoxShadow(color: brand.withOpacity(.35), blurRadius: 18, offset: const Offset(0, 8))],
           ),
           child: ElevatedButton(
@@ -47,7 +48,7 @@ class GradientButton extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.transparent,
               shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(pill ? 30 : 14)),
             ),
             child: loading
                 ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white))
