@@ -74,9 +74,9 @@ class _NavBar extends StatelessWidget {
           child: Container(
             width: 46,
             height: 46,
-            decoration: i == index ? BoxDecoration(color: brand, shape: BoxShape.circle, boxShadow: [BoxShadow(color: brand.withOpacity(.5), blurRadius: 16, offset: const Offset(0, 6))]) : null,
+            decoration: i == index ? BoxDecoration(color: brand, shape: BoxShape.circle, ) : null,
             child: Stack(clipBehavior: Clip.none, alignment: Alignment.center, children: [
-              icon,
+              IconTheme(data: IconThemeData(color: i == index ? onBrand : Colors.white), child: icon),
               if (dot)
                 Positioned(top: 8, left: 8, child: Container(width: 10, height: 10, decoration: BoxDecoration(color: brand, shape: BoxShape.circle, border: Border.all(color: const Color(0xFF16161A), width: 2))))
             ]),
@@ -179,7 +179,7 @@ class _VideoPageState extends State<VideoPage> {
         left: 10,
         bottom: bottom,
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          _btn(liked ? Icons.favorite : Icons.favorite_border, fmt(likes), color: liked ? brand : null, onTap: _like),
+          _btn(liked ? Icons.favorite : Icons.favorite_border, fmt(likes), color: liked ? likeColor : null, onTap: _like),
           const SizedBox(height: 20),
           _btn(Icons.mode_comment_outlined, fmt(0)),
           const SizedBox(height: 20),

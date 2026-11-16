@@ -65,7 +65,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Container(
             width: 42,
             height: 42,
-            decoration: BoxDecoration(color: Colors.white.withOpacity(.11), shape: BoxShape.circle, border: Border.all(color: Colors.white.withOpacity(.13))),
+            decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: const Color(0xFF4C4A63), width: 1.5)),
             child: Icon(icon, size: 21),
           ),
           if (badge != null)
@@ -76,7 +76,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                 constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
                 decoration: BoxDecoration(color: brand, borderRadius: BorderRadius.circular(9), border: Border.all(color: Colors.black, width: 2)),
-                child: Text(badge, textAlign: TextAlign.center, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
+                child: Text(badge, textAlign: TextAlign.center, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: onBrand)),
               ),
             ),
         ]),
@@ -96,14 +96,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           height: 46,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: primary ? brand : Colors.white.withOpacity(.12),
+            color: primary ? brand : Colors.transparent,
             borderRadius: BorderRadius.circular(14),
-            border: primary ? null : Border.all(color: Colors.white.withOpacity(.2)),
-            boxShadow: primary ? [BoxShadow(color: brand.withOpacity(.4), blurRadius: 20, offset: const Offset(0, 8))] : null,
+            border: primary ? null : Border.all(color: outline, width: 1.5),
           ),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(icon, size: 18),
-            if (text.isNotEmpty) ...[const SizedBox(width: 8), Text(text, style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800))],
+            Icon(icon, size: 18, color: primary ? onBrand : const Color(0xFFC9C5E6)),
+            if (text.isNotEmpty) ...[const SizedBox(width: 8), Text(text, style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800, color: primary ? onBrand : const Color(0xFFC9C5E6)))],
           ]),
         ),
       );
@@ -230,15 +229,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: i == _tab ? brand : Colors.white.withOpacity(.1),
+                    color: i == _tab ? brand : Colors.transparent,
                     borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: i == _tab ? brand : Colors.white12),
-                    boxShadow: i == _tab ? [BoxShadow(color: brand.withOpacity(.4), blurRadius: 16, offset: const Offset(0, 6))] : null,
+                    border: Border.all(color: i == _tab ? brand : const Color(0xFF4C4A63), width: 1.5),
                   ),
                   child: Row(children: [
-                    Icon(_tabs[i].$1, size: 16),
+                    Icon(_tabs[i].$1, size: 16, color: i == _tab ? onBrand : const Color(0xFFC9C5E6)),
                     const SizedBox(width: 4),
-                    Text(_tabs[i].$2, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                    Text(_tabs[i].$2, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: i == _tab ? onBrand : const Color(0xFFC9C5E6))),
                   ]),
                 ),
               ),

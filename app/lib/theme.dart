@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
-const brand = Color(0xFFFE2C55); // أحمر تيك توك
+const brand = Color(0xFFB9B3D9); // لافندر هادئ (نمط 6)
+const onBrand = Color(0xFF1F1E26); // نص/أيقونات فوق اللون الأساسي
+const likeColor = Color(0xFFE59AAE); // لون اللايك (وردي هادئ)
+const outline = Color(0xFF6A6685); // حدود الأزرار الثانوية
 const cyan = Color(0xFF25F4EE); // سماوي تيك توك
-const brandDark = Color(0xFFD91E46);
+const brandDark = Color(0xFF9C95C4);
 const bgDark = Color(0xFF000000);
-const fieldFill = Color(0xFF1F1F23);
+const fieldFill = Color(0xFF1F1E26);
 
 ThemeData buildTheme() => ThemeData(
       // بدون fontFamily = خط النظام الأصلي (Roboto + خط العربي الافتراضي بأندرويد)
@@ -41,7 +44,7 @@ class GradientButton extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: const LinearGradient(colors: [brand, brand]),
             borderRadius: BorderRadius.circular(pill ? 30 : 14),
-            boxShadow: [BoxShadow(color: brand.withOpacity(.35), blurRadius: 18, offset: const Offset(0, 8))],
+            
           ),
           child: ElevatedButton(
             onPressed: loading ? null : onPressed,
@@ -51,8 +54,8 @@ class GradientButton extends StatelessWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(pill ? 30 : 14)),
             ),
             child: loading
-                ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white))
-                : Text(text, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.4, color: onBrand))
+                : Text(text, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: onBrand)),
           ),
         ),
       );

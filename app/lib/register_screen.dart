@@ -138,7 +138,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               child: Container(
                                 padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(color: brand, shape: BoxShape.circle, border: Border.all(color: Colors.black, width: 3)),
-                                child: const Icon(Icons.camera_alt_rounded, size: 14, color: Colors.white),
+                                child: const Icon(Icons.camera_alt_rounded, size: 14, color: onBrand),
                               ),
                             ),
                           ]),
