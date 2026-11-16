@@ -1,0 +1,84 @@
+<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=390">
+<style>
+*{box-sizing:border-box;margin:0}
+html{width:390px;height:844px;overflow:hidden;direction:ltr}
+body{width:390px;height:844px;background:#0E0B1F;color:#fff;font-family:"Noto Sans Arabic","DejaVu Sans",Arial,sans-serif;overflow:hidden;position:relative}
+.glow{position:absolute;width:320px;height:320px;border-radius:50%;filter:blur(90px);opacity:.35}
+.g1{background:#7C4DFF;top:-120px;right:-100px}.g2{background:#FF6FB5;bottom:-140px;left:-120px;opacity:.2}
+.status{position:absolute;top:0;left:0;right:0;height:34px;display:flex;justify-content:space-between;padding:10px 22px;font-size:13px;direction:ltr;z-index:3}
+.screen{position:relative;z-index:2;height:100%;padding:70px 24px 24px;display:flex;flex-direction:column}
+.center{justify-content:center;padding-top:34px}
+.logo{display:flex;flex-direction:column;align-items:center;margin-bottom:34px}
+.logo .ic{width:76px;height:76px;border-radius:24px;background:linear-gradient(225deg,#7C4DFF,#FF6FB5);display:grid;place-items:center;box-shadow:0 12px 30px #7C4DFF55}
+.logo h1{font-size:30px;font-weight:800;margin-top:14px}
+.logo p{color:#ffffff80;font-size:13px;margin-top:4px}
+.field{background:#1A1633;border-radius:16px;height:58px;display:flex;align-items:center;gap:12px;padding:0 16px;margin-bottom:14px;border:1.6px solid transparent;color:#ffffff66;font-size:15px}
+.field svg{flex:none;opacity:.6}
+.field span{flex:1}.field.val{color:#fff}
+.field.focus{border-color:#7C4DFF}
+.field.err{border-color:#FF5C7A}.field.ok{border-color:#3ddc97}
+.hint{font-size:12px;margin:-8px 8px 12px;}
+.hint.e{color:#FF5C7A}.hint.o{color:#3ddc97}
+.forgot{color:#B388FF;font-size:14px;margin:-2px 4px 18px}
+.btn{height:54px;border-radius:16px;background:linear-gradient(90deg,#7C4DFF,#B388FF);display:grid;place-items:center;font-weight:700;font-size:17px;box-shadow:0 8px 20px #7C4DFF59}
+.alt{text-align:center;margin-top:22px;font-size:14px;color:#ffffffcc}.alt b{color:#7C4DFF;margin-right:6px}
+.back{text-align:center;color:#7C4DFF;font-size:14px;margin-top:16px;font-weight:600}
+h2{font-size:26px;font-weight:800;text-align:center;margin-bottom:20px}
+.avatar{align-self:center;position:relative;width:112px;height:112px}
+.avatar .c{width:112px;height:112px;border-radius:50%;background:#1A1633;display:grid;place-items:center;overflow:hidden;border:2px dashed #7C4DFF66}
+.avatar .cam{position:absolute;bottom:0;right:0;width:36px;height:36px;border-radius:50%;background:#7C4DFF;display:grid;place-items:center;border:3px solid #0E0B1F}
+.cap{text-align:center;color:#ffffff80;font-size:12px;margin:8px 0 20px}
+.photo{background:linear-gradient(135deg,#ffb88c,#de6262);width:100%;height:100%}
+/* crop */
+.crop{position:absolute;inset:0;background:#000;z-index:5;display:flex;flex-direction:column}
+.crop .bar{height:90px;padding:44px 20px 0;display:flex;justify-content:space-between;align-items:center;font-size:17px;font-weight:700;background:#0E0B1F}
+.crop .area{flex:1;position:relative;background:linear-gradient(160deg,#355c7d,#6c5b7b,#c06c84);overflow:hidden}
+.crop .shade{position:absolute;inset:0;background:radial-gradient(circle 150px at 50% 50%,transparent 148px,#000000b0 150px)}
+.crop .ring{position:absolute;left:50%;top:50%;width:300px;height:300px;margin:-150px;border:2px solid #fff;border-radius:50%}
+.crop .grid{position:absolute;left:50%;top:50%;width:300px;height:300px;margin:-150px;background:linear-gradient(#fff3 1px,transparent 1px) 0 33%/100% 33.3%,linear-gradient(90deg,#fff3 1px,transparent 1px) 33%/33.3% 100%;border-radius:50%}
+.crop .foot{height:90px;background:#0E0B1F;display:flex;justify-content:space-around;align-items:center;font-size:16px}
+.crop .foot .ok{background:linear-gradient(90deg,#7C4DFF,#B388FF);padding:12px 34px;border-radius:14px;font-weight:700}
+.sheet{position:absolute;inset:0;background:#000a;z-index:6;display:flex;align-items:flex-end}
+.sheet .in{background:#1A1633;width:100%;border-radius:26px 26px 0 0;padding:14px 24px 34px}
+.sheet .h{width:44px;height:5px;background:#ffffff40;border-radius:3px;margin:0 auto 20px}
+.sheet .row{display:flex;align-items:center;gap:16px;padding:16px 4px;font-size:16px}
+.sheet .row i{width:46px;height:46px;border-radius:14px;background:#7C4DFF33;display:grid;place-items:center;font-style:normal}
+.spin{width:20px;height:20px;border:2.5px solid #fff4;border-top-color:#fff;border-radius:50%;animation:s 1s linear infinite}
+</style>
+<body><div id="ph" dir="rtl" style="position:absolute;inset:0;overflow:hidden">
+<div class="glow g1"></div><div class="glow g2"></div>
+<div class="status"><span>9:41</span><span>▂▄▆ 100%</span></div>
+<div id="root"></div>
+</div><script>
+const I={
+mail:'<svg width="22" height="22" fill="none" stroke="#fff" stroke-width="1.8"><rect x="2" y="4" width="18" height="14" rx="3"/><path d="M3 6l8 6 8-6"/></svg>',
+lock:'<svg width="22" height="22" fill="none" stroke="#fff" stroke-width="1.8"><rect x="4" y="10" width="14" height="9" rx="2"/><path d="M7 10V7a4 4 0 018 0v3"/></svg>',
+eye:'<svg width="22" height="22" fill="none" stroke="#fff" stroke-width="1.8"><path d="M1 11s4-7 10-7 10 7 10 7-4 7-10 7S1 11 1 11z"/><circle cx="11" cy="11" r="3"/></svg>',
+user:'<svg width="22" height="22" fill="none" stroke="#fff" stroke-width="1.8"><circle cx="11" cy="8" r="4"/><path d="M3 20c1-5 5-6 8-6s7 1 8 6"/></svg>',
+at:'<svg width="22" height="22" fill="none" stroke="#fff" stroke-width="1.8"><circle cx="11" cy="11" r="4"/><path d="M15 11v2a3 3 0 006 0v-2a10 10 0 10-4 8"/></svg>',
+badge:'<svg width="22" height="22" fill="none" stroke="#fff" stroke-width="1.8"><rect x="2" y="4" width="18" height="14" rx="3"/><circle cx="8" cy="10" r="2"/><path d="M13 9h4M13 13h4M5 15c1-2 5-2 6 0"/></svg>',
+cam:'<svg width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><path d="M2 5h3l2-2h4l2 2h3v10H2z"/><circle cx="9" cy="10" r="3"/></svg>',
+person:'<svg width="56" height="56" fill="#ffffff55"><circle cx="28" cy="20" r="11"/><path d="M6 52c2-14 12-17 22-17s20 3 22 17z"/></svg>',
+ok:'<svg width="22" height="22" fill="#3ddc97"><circle cx="11" cy="11" r="10"/><path d="M6 11l4 4 6-7" stroke="#0E0B1F" stroke-width="2.2" fill="none"/></svg>',
+no:'<svg width="22" height="22" fill="#FF5C7A"><circle cx="11" cy="11" r="10"/><path d="M7 7l8 8M15 7l-8 8" stroke="#0E0B1F" stroke-width="2.2"/></svg>',
+img:'<svg width="24" height="24" fill="none" stroke="#B388FF" stroke-width="1.8"><rect x="2" y="3" width="20" height="18" rx="3"/><circle cx="8" cy="9" r="2"/><path d="M3 18l6-6 4 4 3-3 5 5"/></svg>'};
+const f=(ic,t,o={})=>`<div class="field ${o.val?'val':''} ${o.cls||''}">${I[ic]}<span ${o.ltr?'style="direction:ltr;text-align:right"':''}>${t}</span>${o.end||''}</div>${o.hint||''}`;
+const logo=`<div class="logo"><div class="ic"><svg width="44" height="44" fill="#fff"><circle cx="22" cy="14" r="7"/><circle cx="9" cy="19" r="5" opacity=".8"/><circle cx="35" cy="19" r="5" opacity=".8"/><path d="M8 38c1-9 7-12 14-12s13 3 14 12z"/></svg></div><h1>جماعتكم</h1><p>مقاطعك، جماعتك</p></div>`;
+const S={
+login:`<div class="screen center">${logo}${f('mail','البريد الإلكتروني')}${f('lock','كلمة السر',{end:I.eye})}<div class="forgot">نسيت كلمة السر؟</div><div class="btn">دخول ومتابعة</div><div class="alt">ما عندك حساب؟<b>إنشاء حساب</b></div></div>`,
+login_filled:`<div class="screen center">${logo}${f('mail','karrar@example.com',{val:1,ltr:1,cls:'focus'})}${f('lock','••••••••••',{val:1,ltr:1,end:I.eye})}<div class="forgot">نسيت كلمة السر؟</div><div class="btn">دخول ومتابعة</div><div class="alt">ما عندك حساب؟<b>إنشاء حساب</b></div></div>`,
+reg:(o)=>`<div class="screen" style="padding-top:62px"><h2>إنشاء حساب</h2><div class="avatar"><div class="c">${o.photo?'<div class="photo"></div>':I.person}</div><div class="cam">${I.cam}</div></div><div class="cap">اضغط لاختيار صورتك</div>
+${f('badge',o.name||'الاسم الثلاثي',{val:!!o.name,cls:o.nameCls||'',hint:o.nameHint||''})}
+${f('at',o.user||'اسم المستخدم (اليوزر)',{val:!!o.user,ltr:!!o.user,cls:o.userCls||'',end:o.userEnd||'',hint:o.userHint||''})}
+${f('mail',o.email||'بريدك الإلكتروني',{val:!!o.email,ltr:!!o.email})}
+${f('lock',o.pass||'كلمة السر (8 أحرف على الأقل)',{val:!!o.pass,ltr:!!o.pass,end:I.eye})}
+<div class="btn" style="margin-top:6px">إنشاء ومتابعة</div><div class="back">رجوع لتسجيل الدخول</div></div>`,
+};
+S.register=S.reg({});
+S.reg_ok=S.reg({photo:1,name:'كرار علي حسن',nameCls:'',user:'karrar_ali',userCls:'ok',userEnd:I.ok,userHint:'<div class="hint o">اسم المستخدم متاح ✓</div>',email:'karrar@example.com',pass:'••••••••••'});
+S.reg_taken=S.reg({photo:1,name:'كرار علي',nameCls:'err',nameHint:'<div class="hint e">الاسم لازم يكون ثلاثي أو أكثر</div>',user:'karrar',userCls:'err',userEnd:I.no,userHint:'<div class="hint e">اسم المستخدم مستخدم، جرّب غيره</div>',email:'karrar@example.com',pass:'••••••••••'});
+S.perm=S.register+`<div class="sheet"><div class="in"><div class="h"></div><div style="font-weight:800;font-size:18px;margin-bottom:6px">اختر صورتك</div><div style="color:#ffffff80;font-size:13px;margin-bottom:8px">جماعتكم يبي يوصل لصورة وحدة بس تختارها، مو كل صورك</div><div class="row"><i>${I.img}</i>اختيار من المعرض</div><div class="row"><i>${I.cam.replace(/#fff/g,'#B388FF')}</i>التقاط صورة بالكاميرا</div></div></div>`;
+S.crop=`<div class="crop"><div class="bar"><span>✕</span><span>حدد الصورة</span><span style="width:20px"></span></div><div class="area"><div class="shade"></div><div class="grid"></div><div class="ring"></div></div><div class="foot"><span style="color:#ffffff99">إلغاء</span><div class="ok">موافق</div></div></div>`;
+S.forgot=`<div class="screen" style="padding-top:80px"><div style="font-size:26px;font-weight:800">نسيت كلمة السر؟</div><div style="color:#ffffff99;margin:8px 0 28px;font-size:14px">اكتب بريدك وراح نرسل لك رابط إعادة التعيين</div>${f('mail','البريد الإلكتروني')}<div class="btn" style="margin-top:6px">إرسال الرابط</div><div class="back">رجوع لتسجيل الدخول</div></div>`;
+document.getElementById('root').innerHTML=S[location.hash.slice(1)||'login'];
+</script></body></html>

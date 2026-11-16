@@ -1,3 +1,5 @@
 server/server
 app/build/
 app/.dart_tool/
+server/data.json
+server/uploads/

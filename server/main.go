@@ -9,11 +9,11 @@ import (
 )
 
 type Video struct {
-	ID       int    `json:"id"`
-	Title    string `json:"title"`
-	Author   string `json:"author"`
-	URL      string `json:"url"`
-	Likes    int    `json:"likes"`
+	ID     int    `json:"id"`
+	Title  string `json:"title"`
+	Author string `json:"author"`
+	URL    string `json:"url"`
+	Likes  int    `json:"likes"`
 }
 
 var (
@@ -33,6 +33,12 @@ func cors(h http.HandlerFunc) http.HandlerFunc {
 }
 
 func main() {
+	store.load()
+	http.Handle("GET /uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))
+	http.HandleFunc("GET /api/auth/username-available", cors(usernameAvailable))
+	http.HandleFunc("POST /api/auth/register", cors(register))
+	http.HandleFunc("POST /api/auth/login", cors(login))
+	http.HandleFunc("POST /api/auth/forgot", cors(forgot))
 	http.HandleFunc("GET /api/videos", cors(func(w http.ResponseWriter, r *http.Request) {
 		mu.Lock()
 		defer mu.Unlock()
