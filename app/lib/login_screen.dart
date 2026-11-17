@@ -46,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await Api.login(_email.text.trim(), _pass.text);
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const FeedScreen()));
+      Navigator.of(context).pushReplacement(fadeRoute(const FeedScreen()));
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } catch (_) {
@@ -84,56 +84,72 @@ class _LoginScreenState extends State<LoginScreen> {
               left: 0,
               right: 0,
               bottom: kb,
-              child: Container(
+              child: GlassCard(
                 padding: const EdgeInsets.fromLTRB(24, 24, 24, 22),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF161618),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-                  border: Border.all(color: Colors.white10),
-                ),
                 child: Form(
                   key: _form,
                   child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
                     const Text('تسجيل الدخول', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
                     const SizedBox(height: 14),
-                    TextFormField(
-                      controller: _email,
-                      focusNode: _emailFocus,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      textDirection: TextDirection.ltr,
-                      decoration: const InputDecoration(hintText: 'البريد الإلكتروني', prefixIcon: Icon(Icons.mail_outline)),
-                      validator: (v) => RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v?.trim() ?? '') ? null : 'اكتب بريد إلكتروني صحيح',
+                    AnimatedScale(
+                      scale: _emailFocus.hasFocus ? 1.015 : 1,
+                      duration: const Duration(milliseconds: 180),
+                      curve: Curves.easeOut,
+                      child: TextFormField(
+                        controller: _email,
+                        focusNode: _emailFocus,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        textDirection: TextDirection.ltr,
+                        decoration: const InputDecoration(hintText: 'البريد الإلكتروني', prefixIcon: Icon(Icons.mail_outline)),
+                        validator: (v) => RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v?.trim() ?? '') ? null : 'اكتب بريد إلكتروني صحيح',
+                      ),
                     ),
                     const SizedBox(height: 10),
-                    TextFormField(
-                      controller: _pass,
-                      focusNode: _passFocus,
-                      obscureText: _hide,
-                      textDirection: TextDirection.ltr,
-                      onFieldSubmitted: (_) => _submit(),
-                      decoration: InputDecoration(
-                        hintText: 'كلمة السر',
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        suffixIcon: IconButton(icon: Icon(_hide ? Icons.visibility_off_outlined : Icons.visibility_outlined), onPressed: () => setState(() => _hide = !_hide)),
+                    AnimatedScale(
+                      scale: _passFocus.hasFocus ? 1.015 : 1,
+                      duration: const Duration(milliseconds: 180),
+                      curve: Curves.easeOut,
+                      child: TextFormField(
+                        controller: _pass,
+                        focusNode: _passFocus,
+                        obscureText: _hide,
+                        textDirection: TextDirection.ltr,
+                        onFieldSubmitted: (_) => _submit(),
+                        decoration: InputDecoration(
+                          hintText: 'كلمة السر',
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          suffixIcon: IconButton(icon: Icon(_hide ? Icons.visibility_off_outlined : Icons.visibility_outlined), onPressed: () => setState(() => _hide = !_hide)),
+                        ),
+                        validator: (v) => (v ?? '').isEmpty ? 'اكتب كلمة السر' : null,
                       ),
-                      validator: (v) => (v ?? '').isEmpty ? 'اكتب كلمة السر' : null,
                     ),
                     Align(
                       alignment: AlignmentDirectional.centerStart,
-                      child: TextButton(
-                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ForgotScreen())),
-                        child: const Text('نسيت كلمة السر؟', style: TextStyle(fontSize: 13, color: brand)),
+                      child: PressScale(
+                        onTap: () => Navigator.push(context, fadeRoute(const ForgotScreen())),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 10),
+                          child: Text('نسيت كلمة السر؟', style: TextStyle(fontSize: 13, color: brand)),
+                        ),
                       ),
                     ),
-                    if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: const TextStyle(color: Color(0xFFFFB84D)))),
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 180),
+                      child: _error == null
+                          ? const SizedBox.shrink()
+                          : Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: const TextStyle(color: Color(0xFFFFB84D)))),
+                    ),
                     GradientButton(text: 'دخول ومتابعة', loading: _loading, onPressed: _submit),
                     const Divider(height: 28, color: Colors.white10),
                     Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                       const Text('ما عندك حساب؟', style: TextStyle(fontSize: 13, color: Colors.white70)),
-                      TextButton(
-                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen())),
-                        child: const Text('إنشاء حساب', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: brand)),
+                      PressScale(
+                        onTap: () => Navigator.push(context, fadeRoute(const RegisterScreen())),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                          child: Text('إنشاء حساب', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: brand)),
+                        ),
                       ),
                     ]),
                   ]),

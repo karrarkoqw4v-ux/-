@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 const brand = Color(0xFFB9B3D9); // لافندر هادئ (نمط 6)
@@ -30,6 +31,40 @@ ThemeData buildTheme() => ThemeData(
       ),
     );
 
+/// يصغّر أي ويدجت شوي لما تنضغط ويرجعها بحركة ناعمة — إحساس "زر حقيقي"
+/// بدل اللمعة الافتراضية فقط.
+class PressScale extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+  final double downScale;
+  const PressScale({super.key, required this.child, this.onTap, this.downScale = 0.96});
+  @override
+  State<PressScale> createState() => _PressScaleState();
+}
+
+class _PressScaleState extends State<PressScale> {
+  bool _down = false;
+  void _set(bool v) {
+    if (widget.onTap == null) return;
+    setState(() => _down = v);
+  }
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTap,
+        onTapDown: (_) => _set(true),
+        onTapUp: (_) => _set(false),
+        onTapCancel: () => _set(false),
+        child: AnimatedScale(
+          scale: _down ? widget.downScale : 1,
+          duration: const Duration(milliseconds: 110),
+          curve: Curves.easeOut,
+          child: AnimatedOpacity(opacity: _down ? .88 : 1, duration: const Duration(milliseconds: 110), child: widget.child),
+        ),
+      );
+}
+
 class GradientButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
@@ -37,29 +72,64 @@ class GradientButton extends StatelessWidget {
   final bool pill; // زر دائري بالكامل
   const GradientButton({super.key, required this.text, this.onPressed, this.loading = false, this.pill = false});
   @override
-  Widget build(BuildContext context) => SizedBox(
-        width: double.infinity,
-        height: 48,
-        child: DecoratedBox(
+  Widget build(BuildContext context) => PressScale(
+        onTap: loading ? null : onPressed,
+        child: Container(
+          width: double.infinity,
+          height: 48,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [brand, brand]),
+            color: brand,
             borderRadius: BorderRadius.circular(pill ? 30 : 14),
-            
+            boxShadow: [BoxShadow(color: brand.withOpacity(.28), blurRadius: 18, offset: const Offset(0, 8))],
           ),
-          child: ElevatedButton(
-            onPressed: loading ? null : onPressed,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(pill ? 30 : 14)),
-            ),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 180),
             child: loading
-                ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.4, color: onBrand))
-                : Text(text, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: onBrand)),
+                ? const SizedBox(key: ValueKey('spin'), width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.4, color: onBrand))
+                : Text(text, key: const ValueKey('txt'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: onBrand)),
           ),
         ),
       );
 }
+
+/// بطاقة زجاجية: شفافة وضبابية، الخلفية المتحركة خلفها تبان بوضوح خفيف.
+class GlassCard extends StatelessWidget {
+  final Widget child;
+  final BorderRadius borderRadius;
+  final EdgeInsetsGeometry padding;
+  const GlassCard({super.key, required this.child, this.borderRadius = const BorderRadius.vertical(top: Radius.circular(30)), this.padding = const EdgeInsets.all(24)});
+  @override
+  Widget build(BuildContext context) => ClipRRect(
+        borderRadius: borderRadius,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          child: Container(
+            padding: padding,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(.07),
+              borderRadius: borderRadius,
+              border: Border.all(color: Colors.white.withOpacity(.14)),
+            ),
+            child: child,
+          ),
+        ),
+      );
+}
+
+/// تنقّل بحركة تلاشي وانزلاق خفيف بدل القفزة المفاجئة بين الشاشات.
+Route<T> fadeRoute<T>(Widget page) => PageRouteBuilder<T>(
+      transitionDuration: const Duration(milliseconds: 320),
+      reverseTransitionDuration: const Duration(milliseconds: 260),
+      pageBuilder: (_, __, ___) => page,
+      transitionsBuilder: (_, anim, __, child) {
+        final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutCubic);
+        return FadeTransition(
+          opacity: curved,
+          child: SlideTransition(position: Tween(begin: const Offset(0, .04), end: Offset.zero).animate(curved), child: child),
+        );
+      },
+    );
 
 class AuthLogo extends StatelessWidget {
   const AuthLogo({super.key});

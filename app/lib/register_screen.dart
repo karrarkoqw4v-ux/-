@@ -73,7 +73,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       await Api.register(name: _name.text.trim(), username: _user.text.trim().toLowerCase(), email: _email.text.trim(), password: _pass.text, avatar: _avatar);
       if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const FeedScreen()), (_) => false);
+      Navigator.of(context).pushAndRemoveUntil(fadeRoute(const FeedScreen()), (_) => false);
     } on ApiException catch (e) {
       setState(() {
         if (e.field == 'username') _userError = e.message; else _serverError = e.message;
