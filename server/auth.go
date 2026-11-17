@@ -26,16 +26,17 @@ type User struct {
 	Hash     []byte `json:"hash"`
 }
 
+// الحسابات وكلمات السر تبقى محلية بهالسيرفر (مع ملف data.json).
+// المحادثات والرسائل مصدرها الوحيد فايربيس — شوف server/chat.go و server/firebase.go.
 type Store struct {
 	mu       sync.Mutex
 	path     string
-	Users    []User                   `json:"users"`
-	Sessions map[string]string        `json:"sessions"` // token -> user id
-	Convs    map[string]*Conversation `json:"convs"`
+	Users    []User            `json:"users"`
+	Sessions map[string]string `json:"sessions"` // token -> user id
 }
 
 var (
-	store      = &Store{path: "data.json", Sessions: map[string]string{}, Convs: map[string]*Conversation{}}
+	store      = &Store{path: "data.json", Sessions: map[string]string{}}
 	emailRe    = regexp.MustCompile(`^[^@\s]+@[^@\s]+\.[^@\s]+$`)
 	usernameRe = regexp.MustCompile(`^[a-z0-9_.]{3,20}$`)
 )
@@ -47,14 +48,6 @@ func (s *Store) load() {
 	}
 	if s.Sessions == nil {
 		s.Sessions = map[string]string{}
-	}
-	if s.Convs == nil {
-		s.Convs = map[string]*Conversation{}
-	}
-	for _, c := range s.Convs {
-		if c.ReadAt == nil {
-			c.ReadAt = map[string]time.Time{}
-		}
 	}
 }
 
@@ -91,39 +84,52 @@ func nameValid(n string) bool { return len(strings.Fields(n)) >= 3 && utf8.RuneC
 
 // seedDemo يسوّي حسابين تجريبيين مع محادثة فيها رسائل، بس لو ما فيه
 // مستخدمين أبداً (أول تشغيل). يسهّل تجربة التطبيق بدون تسجيل يدوي.
+// محادثة الديمو تحتاج فايربيس متصل (المحادثات مصدرها الوحيد الحين)؛
+// بدونه تنسوي الحسابات بس بدون محادثة جاهزة.
 func seedDemo() {
 	store.mu.Lock()
-	defer store.mu.Unlock()
 	if len(store.Users) > 0 {
+		store.mu.Unlock()
 		return
 	}
 	hash, _ := bcrypt.GenerateFromPassword([]byte("demo1234"), bcrypt.DefaultCost)
 	u1 := User{ID: randHex(8), Name: "حساب تجريبي أول", Username: "demo1", Email: "demo1@test.com", Hash: hash}
 	u2 := User{ID: randHex(8), Name: "حساب تجريبي ثاني", Username: "demo2", Email: "demo2@test.com", Hash: hash}
 	store.Users = append(store.Users, u1, u2)
+	store.save()
+	store.mu.Unlock()
 
-	c := store.getOrCreateConv(u1.ID, u2.ID)
+	fbSyncUser(u1)
+	fbSyncUser(u2)
+	log.Printf("حسابات تجريبية: demo1@test.com / demo2@test.com — كلمة السر: demo1234")
+
+	if !fbReady {
+		log.Printf("حسابات الديمو جاهزة بدون محادثة جاهزة (فايربيس مو متصل) — صِل فايربيس وأعد التشغيل عشان تنسوي المحادثة التجريبية")
+		return
+	}
+	convID := convKey(u1.ID, u2.ID)
+	if err := fbPutSync("/conversations/"+convID+"/participants", map[string]bool{u1.ID: true, u2.ID: true}); err != nil {
+		log.Printf("تعذر إنشاء محادثة الديمو: %v", err)
+		return
+	}
+	_ = fbPutSync("/userConversations/"+u1.ID+"/"+convID, true)
+	_ = fbPutSync("/userConversations/"+u2.ID+"/"+convID, true)
+
 	now := time.Now()
-	msgs := []struct {
-		from string
-		text string
-	}{
+	msgs := []struct{ from, text string }{
 		{u1.ID, "هلا، شلونك؟"},
 		{u2.ID, "هلا والله زين الحمدلله، وإنت؟"},
 		{u1.ID, "تمام، هذا حساب تجريبي أشوف فيه المحادثات"},
 		{u2.ID, "ما شاء الله تصميم جماعتكم حلو 🔥"},
 	}
-	fbSyncUser(u1)
-	fbSyncUser(u2)
-	fbSyncConversation(c)
-	for i, m := range msgs {
-		msg := Message{ID: randHex(8), ConvID: c.ID, SenderID: m.from, Text: m.text, At: now.Add(time.Duration(i) * time.Minute)}
-		c.Messages = append(c.Messages, msg)
-		fbSyncMessage(msg)
+	var lastFrom, lastText, lastAt string
+	for i, mm := range msgs {
+		m := Message{ID: randHex(8), SenderID: mm.from, Text: mm.text, At: now.Add(time.Duration(i) * time.Minute).Format(time.RFC3339Nano)}
+		_ = fbPutSync("/conversations/"+convID+"/messages/"+m.ID, m)
+		lastFrom, lastText, lastAt = mm.from, mm.text, m.At
 	}
-	c.ReadAt[u1.ID] = now.Add(time.Duration(len(msgs)) * time.Minute)
-	store.save()
-	log.Printf("حسابات تجريبية: demo1@test.com / demo2@test.com — كلمة السر: demo1234")
+	_ = fbPutSync("/conversations/"+convID+"/meta", convMeta{LastMessage: lastText, LastAt: lastAt, MessageCount: len(msgs)})
+	_ = fbPutSync("/conversations/"+convID+"/readCount/"+lastFrom, len(msgs))
 }
 
 // GET /api/auth/username-available?username=

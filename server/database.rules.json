@@ -52,7 +52,16 @@
         "meta": {
           ".write": "auth != null && root.child('conversations').child($convId).child('participants').child(auth.uid).exists()",
           "lastMessage": { ".validate": "newData.isString() && newData.val().length <= 4000" },
-          "lastAt": { ".validate": "newData.isString()" }
+          "lastAt": { ".validate": "newData.isString()" },
+          "messageCount": { ".validate": "newData.isNumber() && newData.val() >= 0" }
+        },
+
+        "readCount": {
+          ".read": "auth != null && root.child('conversations').child($convId).child('participants').child(auth.uid).exists()",
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          }
         },
 
         "messages": {

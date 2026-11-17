@@ -15,17 +15,17 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
-// فايربيس: نسخة من المحادثات والرسائل بقاعدة بيانات Firebase Realtime Database
-// حتى تشوفها بوضوح في لوحة فايربيس، وحتى تقدر لاحقاً تربط تطبيقات أو
-// وظائف ثانية (Cloud Functions) تتفاعل وياها مباشرة.
+// فايربيس: المصدر الوحيد لبيانات المحادثات والرسائل (Firebase Realtime
+// Database). الحسابات وكلمات السر تبقى محلية بالسيرفر، لكن أي شي يخص
+// المحادثات (البدء، الإرسال، القراءة) يروح ويجي من فايربيس مباشرة.
 //
 // مهم: هذا غير ملف google-services.json اللي سويت فيه التسجيل بالتطبيق.
 // هذا يحتاج "مفتاح حساب خدمة" (Service Account Key) تنزّله من:
 // Firebase Console → ⚙️ إعدادات المشروع → حسابات الخدمة → Generate new private key
 // وتحط الملف بجنب السيرفر باسم serviceAccountKey.json (أو تحدد مساره بمتغير البيئة FIREBASE_SERVICE_ACCOUNT).
 //
-// السيرفر يشتغل طبيعي حتى بدون هذا الملف — المزامنة مع فايربيس "إضافية"
-// (best effort)، ما توقف تسجيل الدخول ولا المحادثات لو فشلت أو الملف ناقص.
+// بدون هذا الملف: تسجيل الدخول وإنشاء الحساب يشتغلون عادي (محليين)،
+// لكن كل شي يخص المحادثات يرجّع خطأ واضح لأنه ما عنده وين يخزّن.
 var (
 	fbClient  *http.Client
 	fbBaseURL string
@@ -39,7 +39,7 @@ func initFirebase() {
 	}
 	b, err := os.ReadFile(keyPath)
 	if err != nil {
-		log.Printf("فايربيس: تعطيل المزامنة — ما لكيت ملف مفتاح حساب الخدمة (%s). %v", keyPath, err)
+		log.Printf("فايربيس: المحادثات معطّلة — ما لكيت ملف مفتاح حساب الخدمة (%s). راجع server/FIREBASE.md. %v", keyPath, err)
 		return
 	}
 	ctx := context.Background()
@@ -60,61 +60,63 @@ func initFirebase() {
 	fbClient = oauth2.NewClient(ctx, creds.TokenSource)
 	fbClient.Timeout = 10 * time.Second
 	fbReady = true
-	log.Printf("فايربيس: متصل بـ %s", fbBaseURL)
+	log.Printf("فايربيس: متصل بـ %s — المحادثات تشتغل الحين من فايربيس", fbBaseURL)
 }
 
-// fbSet يكتب قيمة بمسار معيّن بقاعدة البيانات (PUT = استبدال كامل لهذا المسار).
-// ما يرجع خطأ للمستخدم أبداً — يسجّله بالسجل فقط، لأن المزامنة إضافية.
+// fbGet يقرأ مسار من قاعدة البيانات. لو المسار فاضي (null) ما يرجع خطأ،
+// بس يخلي out على قيمته الافتراضية.
+func fbGet(path string, out any) error {
+	resp, err := fbClient.Get(fbBaseURL + path + ".json")
+	if err != nil {
+		return fmt.Errorf("فايربيس: تعذر الاتصال: %w", err)
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode >= 300 {
+		return fmt.Errorf("فايربيس: رفض القراءة من %s (%d): %s", path, resp.StatusCode, body)
+	}
+	if string(body) == "null" || len(body) == 0 {
+		return nil // المسار فاضي، نخلي out كما هو (صفري)
+	}
+	return json.Unmarshal(body, out)
+}
+
+// fbPutSync يكتب قيمة بمسار معيّن (استبدال كامل لهذا المسار) وينتظر النتيجة.
+func fbPutSync(path string, v any) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest(http.MethodPut, fbBaseURL+path+".json", bytes.NewReader(b))
+	if err != nil {
+		return err
+	}
+	resp, err := fbClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("فايربيس: تعذر الاتصال: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("فايربيس: رفض الكتابة على %s (%d): %s", path, resp.StatusCode, body)
+	}
+	return nil
+}
+
+// fbSet نسخة "إضافية" (best effort) لا تنتظر ولا ترجع خطأ — تُستخدم لأشياء
+// ثانوية مثل نسخة الملف الشخصي العامة، اللي ما نبي نوقف الطلب الأساسي لأجلها.
 func fbSet(path string, v any) {
 	if !fbReady {
 		return
 	}
 	go func() {
-		b, err := json.Marshal(v)
-		if err != nil {
-			return
-		}
-		req, err := http.NewRequest(http.MethodPut, fbBaseURL+path+".json", bytes.NewReader(b))
-		if err != nil {
-			return
-		}
-		resp, err := fbClient.Do(req)
-		if err != nil {
-			log.Printf("فايربيس: فشلت الكتابة على %s: %v", path, err)
-			return
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode >= 300 {
-			body, _ := io.ReadAll(resp.Body)
-			log.Printf("فايربيس: رفض الكتابة على %s (%d): %s", path, resp.StatusCode, string(body))
+		if err := fbPutSync(path, v); err != nil {
+			log.Printf("%v", err)
 		}
 	}()
 }
 
-// مسارات قاعدة البيانات المستخدمة (تطابق database.rules.json):
-//   users/{uid}                         — نسخة عامة من الملف الشخصي (بدون كلمة السر أبداً)
-//   usernames/{username}                — uid صاحب هذا اليوزر (لمنع التكرار لو قرأها تطبيق ثاني)
-//   conversations/{convId}/participants — أطراف المحادثة
-//   conversations/{convId}/meta         — آخر رسالة ووقتها
-//   conversations/{convId}/messages/{id}— الرسائل نفسها
-//   userConversations/{uid}/{convId}    — فهرس: محادثات كل مستخدم
-
 func fbSyncUser(u User) {
 	fbSet("/users/"+u.ID, map[string]string{"name": u.Name, "username": u.Username, "avatar": u.Avatar})
 	fbSet("/usernames/"+u.Username, u.ID)
-}
-
-func fbSyncConversation(c *Conversation) {
-	fbSet(fmt.Sprintf("/conversations/%s/participants", c.ID), map[string]bool{c.UserA: true, c.UserB: true})
-	fbSet(fmt.Sprintf("/userConversations/%s/%s", c.UserA, c.ID), true)
-	fbSet(fmt.Sprintf("/userConversations/%s/%s", c.UserB, c.ID), true)
-}
-
-func fbSyncMessage(m Message) {
-	fbSet(fmt.Sprintf("/conversations/%s/messages/%s", m.ConvID, m.ID), map[string]any{
-		"id": m.ID, "senderId": m.SenderID, "text": m.Text, "at": m.At.Format(time.RFC3339),
-	})
-	fbSet(fmt.Sprintf("/conversations/%s/meta", m.ConvID), map[string]string{
-		"lastMessage": m.Text, "lastAt": m.At.Format(time.RFC3339),
-	})
 }

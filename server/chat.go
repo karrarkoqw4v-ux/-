@@ -8,24 +8,18 @@ import (
 	"time"
 )
 
+// الرسالة الواحدة، بنفس الشكل المخزّن بفايربيس تحت
+// /conversations/{convId}/messages/{id}
 type Message struct {
-	ID       string    `json:"id"`
-	ConvID   string    `json:"convId"`
-	SenderID string    `json:"senderId"`
-	Text     string    `json:"text"`
-	At       time.Time `json:"at"`
+	ID       string `json:"id"`
+	ConvID   string `json:"-"`
+	SenderID string `json:"senderId"`
+	Text     string `json:"text"`
+	At       string `json:"at"` // RFC3339
 }
 
-// محادثة بين شخصين. المعرف ثابت بغض النظر عن ترتيب الطرفين.
-type Conversation struct {
-	ID       string    `json:"id"`
-	UserA    string    `json:"userA"`
-	UserB    string    `json:"userB"`
-	Messages []Message `json:"messages"`
-	// آخر وقت قرأ فيه كل طرف الرسائل (للعدّاد غير مقروء)
-	ReadAt map[string]time.Time `json:"readAt"`
-}
-
+// معرف المحادثة ثابت بغض النظر عن ترتيب الطرفين، حتى ما نسوي محادثتين
+// بين نفس الشخصين بالغلط.
 func convKey(a, b string) string {
 	if a > b {
 		a, b = b, a
@@ -64,6 +58,16 @@ func requireAuth(h func(w http.ResponseWriter, r *http.Request, me User)) http.H
 	})
 }
 
+// requireFirebase: المحادثات مصدرها الوحيد فايربيس الحين — بدون اتصال
+// فعّال، نرجّع خطأ واضح بدل ما نتظاهر إن فيه بيانات.
+func requireFirebase(w http.ResponseWriter) bool {
+	if !fbReady {
+		fail(w, http.StatusServiceUnavailable, "", "المحادثات تحتاج فايربيس متصل بالسيرفر. راجع server/FIREBASE.md")
+		return false
+	}
+	return true
+}
+
 func (s *Store) findUser(id string) (User, bool) {
 	for _, u := range s.Users {
 		if u.ID == id {
@@ -82,32 +86,10 @@ func (s *Store) findUserByUsername(username string) (User, bool) {
 	return User{}, false
 }
 
-func (s *Store) getOrCreateConv(a, b string) *Conversation {
-	key := convKey(a, b)
-	if c, ok := s.Convs[key]; ok {
-		return c
-	}
-	c := &Conversation{ID: key, UserA: a, UserB: b, ReadAt: map[string]time.Time{}}
-	s.Convs[key] = c
-	return c
-}
-
-func (c *Conversation) other(me string) string {
-	if c.UserA == me {
-		return c.UserB
-	}
-	return c.UserA
-}
-
-func (c *Conversation) unreadCount(me string) int {
-	last := c.ReadAt[me]
-	n := 0
-	for _, m := range c.Messages {
-		if m.SenderID != me && m.At.After(last) {
-			n++
-		}
-	}
-	return n
+type convMeta struct {
+	LastMessage  string `json:"lastMessage"`
+	LastAt       string `json:"lastAt"`
+	MessageCount int    `json:"messageCount"`
 }
 
 type convOut struct {
@@ -120,20 +102,37 @@ type convOut struct {
 
 // GET /api/conversations
 func listConversations(w http.ResponseWriter, r *http.Request, me User) {
-	store.mu.Lock()
-	defer store.mu.Unlock()
+	if !requireFirebase(w) {
+		return
+	}
+	var idx map[string]bool
+	if err := fbGet("/userConversations/"+me.ID, &idx); err != nil {
+		fail(w, http.StatusBadGateway, "", err.Error())
+		return
+	}
 	out := []convOut{}
-	for _, c := range store.Convs {
-		if c.UserA != me.ID && c.UserB != me.ID {
-			continue
+	for convID := range idx {
+		var participants map[string]bool
+		_ = fbGet("/conversations/"+convID+"/participants", &participants)
+		otherID := ""
+		for uid := range participants {
+			if uid != me.ID {
+				otherID = uid
+			}
 		}
-		other, _ := store.findUser(c.other(me.ID))
-		last, lastAt := "", ""
-		if len(c.Messages) > 0 {
-			m := c.Messages[len(c.Messages)-1]
-			last, lastAt = m.Text, m.At.Format(time.RFC3339)
+		other, _ := store.findUser(otherID)
+
+		var meta convMeta
+		_ = fbGet("/conversations/"+convID+"/meta", &meta)
+
+		var readCount map[string]int
+		_ = fbGet("/conversations/"+convID+"/readCount", &readCount)
+		unread := meta.MessageCount - readCount[me.ID]
+		if unread < 0 {
+			unread = 0
 		}
-		out = append(out, convOut{ID: c.ID, User: publicUser(other), LastMessage: last, LastAt: lastAt, UnreadCount: c.unreadCount(me.ID)})
+
+		out = append(out, convOut{ID: convID, User: publicUser(other), LastMessage: meta.LastMessage, LastAt: meta.LastAt, UnreadCount: unread})
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].LastAt > out[j].LastAt })
 	json.NewEncoder(w).Encode(out)
@@ -141,6 +140,9 @@ func listConversations(w http.ResponseWriter, r *http.Request, me User) {
 
 // POST /api/conversations/start {username}
 func startConversation(w http.ResponseWriter, r *http.Request, me User) {
+	if !requireFirebase(w) {
+		return
+	}
 	var in struct{ Username string }
 	if json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<16)).Decode(&in) != nil {
 		fail(w, 400, "", "طلب غير صالح")
@@ -148,8 +150,8 @@ func startConversation(w http.ResponseWriter, r *http.Request, me User) {
 	}
 	username := strings.ToLower(strings.TrimSpace(in.Username))
 	store.mu.Lock()
-	defer store.mu.Unlock()
 	other, ok := store.findUserByUsername(username)
+	store.mu.Unlock()
 	if !ok {
 		fail(w, 404, "username", "ما لكينا هذا المستخدم")
 		return
@@ -158,29 +160,58 @@ func startConversation(w http.ResponseWriter, r *http.Request, me User) {
 		fail(w, 400, "username", "ما تقدر تراسل نفسك")
 		return
 	}
-	c := store.getOrCreateConv(me.ID, other.ID)
-	store.save()
-	fbSyncConversation(c)
-	json.NewEncoder(w).Encode(map[string]any{"id": c.ID, "user": publicUser(other)})
+
+	convID := convKey(me.ID, other.ID)
+	// PUT بنفس القيمة كل مرة آمن (idempotent) — ما يسوي تكرار لو المحادثة موجودة أصلاً
+	if err := fbPutSync("/conversations/"+convID+"/participants", map[string]bool{me.ID: true, other.ID: true}); err != nil {
+		fail(w, http.StatusBadGateway, "", err.Error())
+		return
+	}
+	_ = fbPutSync("/userConversations/"+me.ID+"/"+convID, true)
+	_ = fbPutSync("/userConversations/"+other.ID+"/"+convID, true)
+	json.NewEncoder(w).Encode(map[string]any{"id": convID, "user": publicUser(other)})
+}
+
+func userInConv(uid, convID string) bool {
+	var participants map[string]bool
+	_ = fbGet("/conversations/"+convID+"/participants", &participants)
+	return participants[uid]
 }
 
 // GET /api/conversations/{id}/messages
 func listMessages(w http.ResponseWriter, r *http.Request, me User) {
+	if !requireFirebase(w) {
+		return
+	}
 	id := r.PathValue("id")
-	store.mu.Lock()
-	defer store.mu.Unlock()
-	c, ok := store.Convs[id]
-	if !ok || (c.UserA != me.ID && c.UserB != me.ID) {
+	if !userInConv(me.ID, id) {
 		fail(w, 404, "", "المحادثة غير موجودة")
 		return
 	}
-	c.ReadAt[me.ID] = time.Now()
-	store.save()
-	json.NewEncoder(w).Encode(c.Messages)
+	var byID map[string]Message
+	if err := fbGet("/conversations/"+id+"/messages", &byID); err != nil {
+		fail(w, http.StatusBadGateway, "", err.Error())
+		return
+	}
+	msgs := make([]Message, 0, len(byID))
+	for _, m := range byID {
+		msgs = append(msgs, m)
+	}
+	sort.Slice(msgs, func(i, j int) bool { return msgs[i].At < msgs[j].At })
+
+	// صار قراها، نعلّم إنه وصل لآخر رسالة
+	var meta convMeta
+	_ = fbGet("/conversations/"+id+"/meta", &meta)
+	_ = fbPutSync("/conversations/"+id+"/readCount/"+me.ID, meta.MessageCount)
+
+	json.NewEncoder(w).Encode(msgs)
 }
 
 // POST /api/conversations/{id}/messages {text}
 func sendMessage(w http.ResponseWriter, r *http.Request, me User) {
+	if !requireFirebase(w) {
+		return
+	}
 	id := r.PathValue("id")
 	var in struct{ Text string }
 	if json.NewDecoder(http.MaxBytesReader(w, r.Body, 4<<10)).Decode(&in) != nil {
@@ -192,17 +223,23 @@ func sendMessage(w http.ResponseWriter, r *http.Request, me User) {
 		fail(w, 400, "text", "اكتب رسالة")
 		return
 	}
-	store.mu.Lock()
-	defer store.mu.Unlock()
-	c, ok := store.Convs[id]
-	if !ok || (c.UserA != me.ID && c.UserB != me.ID) {
+	if !userInConv(me.ID, id) {
 		fail(w, 404, "", "المحادثة غير موجودة")
 		return
 	}
-	m := Message{ID: randHex(8), ConvID: id, SenderID: me.ID, Text: text, At: time.Now()}
-	c.Messages = append(c.Messages, m)
-	c.ReadAt[me.ID] = m.At
-	store.save()
-	fbSyncMessage(m)
+
+	m := Message{ID: randHex(8), SenderID: me.ID, Text: text, At: time.Now().Format(time.RFC3339Nano)}
+	if err := fbPutSync("/conversations/"+id+"/messages/"+m.ID, m); err != nil {
+		fail(w, http.StatusBadGateway, "", err.Error())
+		return
+	}
+
+	var meta convMeta
+	_ = fbGet("/conversations/"+id+"/meta", &meta)
+	meta.LastMessage, meta.LastAt, meta.MessageCount = m.Text, m.At, meta.MessageCount+1
+	_ = fbPutSync("/conversations/"+id+"/meta", meta)
+	_ = fbPutSync("/conversations/"+id+"/readCount/"+me.ID, meta.MessageCount) // المرسل "قاري" رسالته هو
+
+	m.ConvID = id
 	json.NewEncoder(w).Encode(m)
 }
