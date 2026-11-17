@@ -1,7 +1,5 @@
-import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'api.dart';
 import 'feed_screen.dart' show fmt;
 import 'glow_background.dart';
@@ -31,11 +29,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     Api.currentUser().then((u) {
       if (mounted) setState(() => _user = u);
+      Api.videos().then((all) {
+        if (mounted && u != null) setState(() => _myVideos = all.where((v) => v['author'] == u['username']).toList());
+      }).catchError((_) {});
     });
-    http.get(Uri.parse('$apiBase/videos')).then((r) {
-      final all = jsonDecode(utf8.decode(r.bodyBytes)) as List;
-      if (mounted && _user != null) setState(() => _myVideos = all.where((v) => v['author'] == _user!['username']).toList());
-    }).catchError((_) {});
   }
 
   Future<void> _logout() async {
@@ -119,7 +116,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: CircleAvatar(
             radius: 39,
             backgroundColor: fieldFill,
-            backgroundImage: path.isNotEmpty ? NetworkImage('$host$path') : null,
+            backgroundImage: path.isNotEmpty ? NetworkImage(path) : null,
             child: path.isEmpty ? const Icon(Icons.person_rounded, size: 40, color: Colors.white54) : null,
           ),
         ),

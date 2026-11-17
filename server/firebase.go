@@ -39,7 +39,7 @@ func initFirebase() {
 	}
 	b, err := os.ReadFile(keyPath)
 	if err != nil {
-		log.Printf("فايربيس: المحادثات معطّلة — ما لكيت ملف مفتاح حساب الخدمة (%s). راجع server/FIREBASE.md. %v", keyPath, err)
+		log.Printf("فايربيس: المحادثات معطّلة — ما لكيت ملف مفتاح حساب الخدمة (%s). راجع firebase/SETUP.md. %v", keyPath, err)
 		return
 	}
 	ctx := context.Background()

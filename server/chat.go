@@ -62,7 +62,7 @@ func requireAuth(h func(w http.ResponseWriter, r *http.Request, me User)) http.H
 // فعّال، نرجّع خطأ واضح بدل ما نتظاهر إن فيه بيانات.
 func requireFirebase(w http.ResponseWriter) bool {
 	if !fbReady {
-		fail(w, http.StatusServiceUnavailable, "", "المحادثات تحتاج فايربيس متصل بالسيرفر. راجع server/FIREBASE.md")
+		fail(w, http.StatusServiceUnavailable, "", "المحادثات تحتاج فايربيس متصل بالسيرفر. راجع firebase/SETUP.md")
 		return false
 	}
 	return true

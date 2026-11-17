@@ -117,7 +117,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
     return CircleAvatar(
       radius: 28,
       backgroundColor: fieldFill,
-      backgroundImage: path.isNotEmpty ? NetworkImage('$host$path') : null,
+      backgroundImage: path.isNotEmpty ? NetworkImage(path) : null,
       child: path.isEmpty ? const Icon(Icons.person_rounded, size: 28, color: Colors.white38) : null,
     );
   }

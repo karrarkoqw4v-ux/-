@@ -76,7 +76,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _avatar() {
     final path = widget.otherUser['avatar'] as String? ?? '';
-    return CircleAvatar(radius: 18, backgroundColor: fieldFill, backgroundImage: path.isNotEmpty ? NetworkImage('$host$path') : null, child: path.isEmpty ? const Icon(Icons.person_rounded, size: 18, color: Colors.white38) : null);
+    return CircleAvatar(radius: 18, backgroundColor: fieldFill, backgroundImage: path.isNotEmpty ? NetworkImage(path) : null, child: path.isEmpty ? const Icon(Icons.person_rounded, size: 18, color: Colors.white38) : null);
   }
 
   @override

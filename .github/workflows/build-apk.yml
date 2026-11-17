@@ -2,11 +2,6 @@ name: Build Android APK
 
 on:
   workflow_dispatch:
-    inputs:
-      api_host:
-        description: "عنوان السيرفر (مثال: http://192.168.1.10:8080 أو https://api.example.com)"
-        required: true
-        default: "http://10.0.2.2:8080"
   push:
     branches: [ccr-e1c59c96-ouzyav]
     paths: ["app/**", ".github/workflows/build-apk.yml"]
@@ -29,12 +24,47 @@ jobs:
 
       - name: Create Android project files
         working-directory: app
-        run: flutter create --platforms=android --org com.jamaatkum --project-name jamaatkum .
+        run: flutter create --platforms=android --org com.Jamaatkum --project-name app .
 
-      - name: Patch AndroidManifest (internet, http, crop screen, app name)
+      - name: Add google-services.json (Firebase)
+        working-directory: app
+        run: cp google-services.json android/app/google-services.json
+
+      - name: Apply google-services Gradle plugin
         working-directory: app
         run: |
           python3 - <<'PY'
+          # في قوالب فلاتر الحديثة، إعلان الإضافات صار بملف settings.gradle.kts
+          # (مو android/build.gradle.kts القديم) — نضيف إضافة google-services هناك.
+          p = "android/settings.gradle.kts"
+          s = open(p, encoding="utf-8").read()
+          if "com.google.gms.google-services" not in s:
+              s = s.replace(
+                  'id("dev.flutter.flutter-plugin-loader") version "1.0.0"',
+                  'id("dev.flutter.flutter-plugin-loader") version "1.0.0"\n    id("com.google.gms.google-services") version "4.4.2" apply false',
+                  1,
+              )
+          open(p, "w", encoding="utf-8").write(s)
+
+          p2 = "android/app/build.gradle.kts"
+          s2 = open(p2, encoding="utf-8").read()
+          if 'id("com.google.gms.google-services")' not in s2:
+              s2 = s2.replace(
+                  'id("dev.flutter.flutter-gradle-plugin")',
+                  'id("dev.flutter.flutter-gradle-plugin")\n    id("com.google.gms.google-services")',
+                  1,
+              )
+          open(p2, "w", encoding="utf-8").write(s2)
+          PY
+          cat android/settings.gradle.kts
+          echo "---"
+          cat android/app/build.gradle.kts
+
+      - name: Patch AndroidManifest (internet, notifications, crop screen, app name)
+        working-directory: app
+        run: |
+          python3 - <<'PY'
+          import re
           p = "android/app/src/main/AndroidManifest.xml"
           s = open(p, encoding="utf-8").read()
           if "android.permission.INTERNET" not in s:
@@ -42,7 +72,9 @@ jobs:
           if "POST_NOTIFICATIONS" not in s:
               s = s.replace("<application", '<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>\n    <application', 1)
           s = s.replace("<application", '<application android:usesCleartextTraffic="true"', 1)
-          s = s.replace('android:label="jamaatkum"', 'android:label="جماعتكم"')
+          # بدل ما نخمّن القيمة المولّدة بالضبط (تعتمد على اسم المشروع)، نستبدل
+          # أي قيمة android:label="..." بالاسم العربي — أضمن لو تغيّر اسم المشروع لاحقاً
+          s = re.sub(r'android:label="[^"]*"', 'android:label="جماعتكم"', s, count=1)
           # windowOptOutEdgeToEdgeEnforcement يمنع شريط أزرار شاشة القص (موافق/إلغاء)
           # من الانزلاق تحت شريط الحالة واختفاءه على أجهزة أندرويد 15+
           crop = '<activity android:name="com.yalantis.ucrop.UCropActivity" android:screenOrientation="portrait" android:theme="@style/Theme.AppCompat.Light.NoActionBar" android:windowOptOutEdgeToEdgeEnforcement="true"/>'
@@ -75,7 +107,7 @@ jobs:
         working-directory: app
         run: |
           flutter pub get
-          flutter build apk --release --dart-define=API_HOST=${{ github.event.inputs.api_host || 'http://10.0.2.2:8080' }}
+          flutter build apk --release
 
       - uses: actions/upload-artifact@v4
         with:

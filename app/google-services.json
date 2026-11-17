@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "30425398626",
+    "firebase_url": "https://ssus-b6995-default-rtdb.firebaseio.com",
+    "project_id": "ssus-b6995",
+    "storage_bucket": "ssus-b6995.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:30425398626:android:117602d68db29100c4403b",
+        "android_client_info": {
+          "package_name": "com.Jamaatkum.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "30425398626-e61lpccqglujm88igoh15ue3c135a53r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDmOdU5dlhvyqLzoEPbrMbxCnfAHk3g-qA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "30425398626-e61lpccqglujm88igoh15ue3c135a53r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

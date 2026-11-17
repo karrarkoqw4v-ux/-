@@ -67,14 +67,24 @@
         "messages": {
           "$msgId": {
             ".write": "auth != null && root.child('conversations').child($convId).child('participants').child(auth.uid).exists() && !data.exists() && newData.child('senderId').val() === auth.uid",
-            ".validate": "newData.hasChildren(['id', 'senderId', 'text', 'at'])",
-            "id": { ".validate": "newData.isString()" },
+            ".validate": "newData.hasChildren(['senderId', 'text', 'at'])",
             "senderId": { ".validate": "newData.isString()" },
             "text": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 4000" },
             "at": { ".validate": "newData.isString()" },
             "$other": { ".validate": false }
           }
         }
+      }
+    },
+
+    "videos": {
+      ".read": true,
+      "$id": {
+        ".write": "auth != null",
+        "likes": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+        "title": { ".validate": "newData.isString()" },
+        "author": { ".validate": "newData.isString()" },
+        "url": { ".validate": "newData.isString()" }
       }
     }
   }

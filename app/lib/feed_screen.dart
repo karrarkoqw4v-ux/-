@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:video_player/video_player.dart';
 import 'api.dart';
 import 'chat_list_screen.dart';
@@ -32,7 +30,7 @@ class _FeedScreenState extends State<FeedScreen> {
   @override
   void initState() {
     super.initState();
-    _videos = http.get(Uri.parse('$apiBase/videos')).then((r) => jsonDecode(utf8.decode(r.bodyBytes)) as List);
+    _videos = Api.videos();
   }
 
   @override
@@ -152,8 +150,8 @@ class _VideoPageState extends State<VideoPage> {
     if (liked) return;
     setState(() { liked = true; likes++; });
     try {
-      final r = await http.post(Uri.parse('$apiBase/videos/${widget.video['id']}/like'));
-      if (mounted) setState(() => likes = jsonDecode(r.body)['likes']);
+      final newLikes = await Api.likeVideo(widget.video['id'] as int);
+      if (mounted) setState(() => likes = newLikes);
     } catch (_) {}
   }
 
