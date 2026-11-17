@@ -35,12 +35,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final c = await ImageCropper().cropImage(
       sourcePath: x.path,
       aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-      cropStyle: CropStyle.circle, // إطار دائري، والناتج مربع 1:1
       maxWidth: 512,
       maxHeight: 512,
       compressQuality: 85,
       uiSettings: [
         AndroidUiSettings(
+          cropStyle: CropStyle.circle, // إطار دائري، والناتج مربع 1:1 — خاص بإعدادات أندرويد
           toolbarTitle: 'تحديد الصورة',
           toolbarColor: bgDark,
           statusBarColor: bgDark, // نفس لون الشريط حتى ما يصير فرق فوق يخفي الأزرار
