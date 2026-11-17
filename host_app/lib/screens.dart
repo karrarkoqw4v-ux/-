@@ -105,15 +105,34 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  bool register = false;
+  bool register = false, loading = false;
   final u = TextEditingController(), p = TextEditingController(), p2 = TextEditingController();
   String? err;
 
-  void submit() {
+  Future<void> submit() async {
+    if (loading) return;
+    setState(() {
+      loading = true;
+      err = null;
+    });
     final e = register
-        ? app.register(u.text.trim(), p.text, p2.text)
-        : app.login(u.text, p.text);
-    if (e != null) setState(() => err = e);
+        ? await app.register(u.text.trim(), p.text, p2.text)
+        : await app.login(u.text.trim(), p.text);
+    if (mounted) {
+      setState(() {
+        loading = false;
+        err = e;
+      });
+    }
+  }
+
+  Future<void> serverDialog() async {
+    final r = await askText(context, 'عنوان الخادم (مثال: https://my-host.com)',
+        initial: app.base);
+    if (r != null) {
+      app.setBase(r);
+      if (mounted) setState(() {});
+    }
   }
 
   @override
@@ -144,9 +163,9 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
             const SizedBox(height: 4),
             PressBtn(
-                label: register ? 'التالي' : 'دخول',
-                icon: register ? Icons.arrow_back_rounded : null,
-                onTap: submit),
+                label: loading ? 'جاري الاتصال…' : (register ? 'التالي' : 'دخول'),
+                icon: register && !loading ? Icons.arrow_back_rounded : null,
+                onTap: loading ? null : submit),
             const SizedBox(height: 16),
             GestureDetector(
               onTap: () => setState(() {
@@ -162,6 +181,15 @@ class _AuthScreenState extends State<AuthScreen> {
                         style: const TextStyle(
                             color: Color(0xFF06B6D4), fontWeight: FontWeight.w800))
                   ])),
+            ),
+            const SizedBox(height: 22),
+            TextButton.icon(
+              onPressed: serverDialog,
+              icon: const Icon(Icons.dns_outlined, size: 18),
+              label: Text(
+                  app.base.isEmpty ? 'إعدادات الخادم (مطلوب)' : 'الخادم: ${app.base}',
+                  textDirection: TextDirection.ltr,
+                  style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12)),
             ),
           ]),
         ),
@@ -736,11 +764,18 @@ class _ExtractPageState extends State<ExtractPage> {
             icon: Icons.save_outlined,
             onTap: staged.isEmpty
                 ? null
-                : () {
-                    final f = app.files(widget.lang.id)..addAll(staged);
-                    app.saveFiles(widget.lang.id, f);
-                    Navigator.pop(context);
-                    toast(context, 'تم حفظ ${staged.length} ملف في قسم الملفات');
+                : () async {
+                    try {
+                      final f = await app.files(widget.lang.id)
+                        ..addAll(staged);
+                      await app.saveFiles(widget.lang.id, f);
+                      if (!mounted) return;
+                      final n = staged.length;
+                      Navigator.pop(context);
+                      toast(context, 'تم حفظ $n ملف في قسم الملفات');
+                    } on ApiError catch (e) {
+                      if (mounted) toast(context, e.msg);
+                    }
                   }),
       ]),
     );
@@ -772,23 +807,58 @@ class FilesTab extends StatefulWidget {
 
 class _FilesTabState extends State<FilesTab> {
   String cwd = '';
+  Map<String, String> files = {};
+  bool loading = true;
+  String? error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      loading = true;
+      error = null;
+    });
+    try {
+      final f = await app.files(widget.lang.id);
+      if (mounted) {
+        setState(() {
+          files = f;
+          loading = false;
+        });
+      }
+    } on ApiError catch (e) {
+      if (mounted) {
+        setState(() {
+          error = e.msg;
+          loading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _commit(Map<String, String> nf) async {
+    try {
+      await app.saveFiles(widget.lang.id, nf);
+      if (mounted) setState(() => files = nf);
+    } on ApiError catch (e) {
+      if (mounted) toast(context, e.msg);
+    }
+  }
 
   String _p(String name) => cwd.isEmpty ? name : '$cwd/$name';
-
-  void _put(String path, String code) {
-    final f = app.files(widget.lang.id);
-    f[path] = code;
-    app.saveFiles(widget.lang.id, f);
-  }
 
   Future<void> _newFolder() async {
     final name = await askText(context, 'اسم المجلد');
     if (name == null || name.isEmpty) return;
-    final f = app.files(widget.lang.id);
+    final f = Map<String, String>.from(files);
     final picked = await pickFiles();
     if (picked.isEmpty) f['${_p(name)}/.keep'] = '';
     picked.forEach((k, v) => f['${_p(name)}/$k'] = v);
-    app.saveFiles(widget.lang.id, f);
+    await _commit(f);
     if (mounted) toast(context, 'تم إنشاء المجلد $name');
   }
 
@@ -800,24 +870,22 @@ class _FilesTabState extends State<FilesTab> {
                   name: cwd.isEmpty ? '' : '$cwd/',
                   code: '',
                   isNew: true,
-                  onSave: (n, code) => _put(n, code),
+                  onSave: (n, code) => _commit(Map<String, String>.from(files)..[n] = code),
                 )));
   }
 
   void _editFile(String path) {
-    final code = app.files(widget.lang.id)[path] ?? '';
     Navigator.push(
         context,
         MaterialPageRoute(
             builder: (_) => EditorPage(
                   name: path,
-                  code: code,
+                  code: files[path] ?? '',
                   isNew: false,
                   onSave: (n, c) {
-                    final f = app.files(widget.lang.id);
-                    f.remove(path);
+                    final f = Map<String, String>.from(files)..remove(path);
                     f[n] = c;
-                    app.saveFiles(widget.lang.id, f);
+                    _commit(f);
                   },
                 )));
   }
@@ -825,9 +893,8 @@ class _FilesTabState extends State<FilesTab> {
   Future<void> _renamePath(String path, bool dir) async {
     final r = await askText(context, 'تعديل الاسم', initial: path);
     if (r == null || r.isEmpty || r == path) return;
-    final f = app.files(widget.lang.id);
     final out = <String, String>{};
-    f.forEach((k, v) {
+    files.forEach((k, v) {
       if (dir && k.startsWith('$path/')) {
         out['$r/${k.substring(path.length + 1)}'] = v;
       } else if (!dir && k == path) {
@@ -836,118 +903,119 @@ class _FilesTabState extends State<FilesTab> {
         out[k] = v;
       }
     });
-    app.saveFiles(widget.lang.id, out);
+    await _commit(out);
   }
 
-  void _delete(String path, bool dir) {
-    final f = app.files(widget.lang.id)
+  Future<void> _delete(String path, bool dir) async {
+    final f = Map<String, String>.from(files)
       ..removeWhere((k, _) => dir ? k.startsWith('$path/') : k == path);
-    app.saveFiles(widget.lang.id, f);
+    await _commit(f);
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: app,
-      builder: (_, __) {
-        final f = app.files(widget.lang.id);
-        final dirs = <String>{};
-        final here = <String>[];
-        for (final k in f.keys) {
-          if (cwd.isNotEmpty && !k.startsWith('$cwd/')) continue;
-          final rest = cwd.isEmpty ? k : k.substring(cwd.length + 1);
-          if (rest.contains('/')) {
-            dirs.add(rest.split('/').first);
-          } else if (rest != '.keep') {
-            here.add(rest);
-          }
-        }
-        final dl = dirs.toList()..sort();
-        here.sort();
-        Widget big(IconData i, String t, VoidCallback on) => Expanded(
-              child: Glass(
-                radius: 16,
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-                onTap: on,
-                child: Column(children: [
-                  Icon(i, size: 24),
-                  const SizedBox(height: 6),
-                  Text(t,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
-                ]),
-              ),
-            );
-        Widget row(IconData i, String name, String path, bool dir) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Glass(
-                radius: 14,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-                onTap: () => dir ? setState(() => cwd = path) : _editFile(path),
-                onLongPress: () => fileActions(context, path,
-                    onRename: () => _renamePath(path, dir),
-                    onEdit: dir ? null : () => _editFile(path),
-                    onDelete: () => _delete(path, dir)),
-                child: Row(children: [
-                  Icon(i, size: 19),
-                  const SizedBox(width: 10),
-                  Expanded(
-                      child: Text(dir ? '$name/' : name,
-                          textDirection: TextDirection.ltr,
-                          style: const TextStyle(fontFamily: 'monospace'))),
-                ]),
-              ),
-            );
-        return Column(children: [
-          Row(children: [
-            big(Icons.folder_zip_outlined, 'إنشاء مجلد (ZIP)', _newFolder),
-            const SizedBox(width: 8),
-            big(Icons.note_add_outlined, 'إنشاء ملف', _newFile),
-            const SizedBox(width: 8),
-            big(Icons.upload_file_rounded, 'استخراج', () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => ExtractPage(lang: widget.lang)));
-            }),
-          ]),
-          if (cwd.isNotEmpty)
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                  onPressed: () => setState(() {
-                        final i = cwd.lastIndexOf('/');
-                        cwd = i < 0 ? '' : cwd.substring(0, i);
-                      }),
-                  icon: const Icon(Icons.arrow_upward_rounded, size: 18),
-                  label: Text('/$cwd', textDirection: TextDirection.ltr)),
-            ),
-          const SizedBox(height: 10),
-          Expanded(
-            child: (dl.isEmpty && here.isEmpty)
-                ? Center(
-                    child: Text('لا توجد ملفات بعد\nأنشئ ملفاً أو ارفع ملفاتك',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white.withOpacity(0.6))))
-                : ListView(children: [
-                    for (final d in dl) row(Icons.folder_outlined, d, _p(d), true),
-                    for (final n in here)
-                      row(Icons.insert_drive_file_outlined, n, _p(n), false),
-                  ]),
+    final f = files;
+    final dirs = <String>{};
+    final here = <String>[];
+    for (final k in f.keys) {
+      if (cwd.isNotEmpty && !k.startsWith('$cwd/')) continue;
+      final rest = cwd.isEmpty ? k : k.substring(cwd.length + 1);
+      if (rest.contains('/')) {
+        dirs.add(rest.split('/').first);
+      } else if (rest != '.keep') {
+        here.add(rest);
+      }
+    }
+    final dl = dirs.toList()..sort();
+    here.sort();
+    Widget big(IconData i, String t, VoidCallback on) => Expanded(
+          child: Glass(
+            radius: 16,
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+            onTap: on,
+            child: Column(children: [
+              Icon(i, size: 24),
+              const SizedBox(height: 6),
+              Text(t,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
+            ]),
           ),
-        ]);
-      },
-    );
+        );
+    Widget row(IconData i, String name, String path, bool dir) => Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Glass(
+            radius: 14,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+            onTap: () => dir ? setState(() => cwd = path) : _editFile(path),
+            onLongPress: () => fileActions(context, path,
+                onRename: () => _renamePath(path, dir),
+                onEdit: dir ? null : () => _editFile(path),
+                onDelete: () => _delete(path, dir)),
+            child: Row(children: [
+              Icon(i, size: 19),
+              const SizedBox(width: 10),
+              Expanded(
+                  child: Text(dir ? '$name/' : name,
+                      textDirection: TextDirection.ltr,
+                      style: const TextStyle(fontFamily: 'monospace'))),
+            ]),
+          ),
+        );
+    return Column(children: [
+      Row(children: [
+        big(Icons.folder_zip_outlined, 'إنشاء مجلد (ZIP)', _newFolder),
+        const SizedBox(width: 8),
+        big(Icons.note_add_outlined, 'إنشاء ملف', _newFile),
+        const SizedBox(width: 8),
+        big(Icons.upload_file_rounded, 'استخراج', () {
+          Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => ExtractPage(lang: widget.lang)))
+              .then((_) => _load());
+        }),
+      ]),
+      if (cwd.isNotEmpty)
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+              onPressed: () => setState(() {
+                    final i = cwd.lastIndexOf('/');
+                    cwd = i < 0 ? '' : cwd.substring(0, i);
+                  }),
+              icon: const Icon(Icons.arrow_upward_rounded, size: 18),
+              label: Text('/$cwd', textDirection: TextDirection.ltr)),
+        ),
+      const SizedBox(height: 10),
+      Expanded(
+        child: loading
+            ? const Center(child: CircularProgressIndicator())
+            : error != null
+                ? Center(
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    Text(error!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Color(0xFFFF6B88))),
+                    TextButton(onPressed: _load, child: const Text('إعادة المحاولة')),
+                  ]))
+                : (dl.isEmpty && here.isEmpty)
+                    ? Center(
+                        child: Text('لا توجد ملفات بعد\nأنشئ ملفاً أو ارفع ملفاتك',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white.withOpacity(0.6))))
+                    : RefreshIndicator(
+                        onRefresh: _load,
+                        child: ListView(children: [
+                          for (final d in dl) row(Icons.folder_outlined, d, _p(d), true),
+                          for (final n in here)
+                            row(Icons.insert_drive_file_outlined, n, _p(n), false),
+                        ]),
+                      ),
+      ),
+    ]);
   }
 }
 
-// ───────── لوحة التحكم (الكونسل) ─────────
-class _Session {
-  final logs = <LogLine>[];
-  String state = 'idle'; // idle | running | error | busy
-  StreamSubscription<LogLine>? sub;
-}
-
-final _sessions = <String, _Session>{};
-
+// ───────── لوحة التحكم (الكونسل) — تشغيل حقيقي على الخادم ─────────
 class ConsoleTab extends StatefulWidget {
   final Lang lang;
   const ConsoleTab({super.key, required this.lang});
@@ -957,82 +1025,112 @@ class ConsoleTab extends StatefulWidget {
 
 class _ConsoleTabState extends State<ConsoleTab> {
   final scroll = ScrollController();
-  _Session get s => _sessions.putIfAbsent(widget.lang.id, () => _Session());
+  final lines = <Map>[];
+  int next = 0;
+  String state = 'idle';
+  String? err;
+  bool polling = false;
+  Timer? timer;
 
-  void _refresh() {
-    if (!mounted) return;
-    setState(() {});
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (scroll.hasClients) scroll.jumpTo(scroll.position.maxScrollExtent);
-    });
+  @override
+  void initState() {
+    super.initState();
+    _poll();
+    timer = Timer.periodic(const Duration(milliseconds: 1200), (_) => _poll());
   }
 
-  void start() {
-    if (s.state == 'busy' || s.state == 'running') return;
-    s.sub?.cancel();
-    s.logs.clear();
-    s.state = 'busy';
-    s.sub = runProject(widget.lang, app.files(widget.lang.id)).listen((l) {
-      s.logs.add(l);
-      _refresh();
-    }, onDone: () {
-      s.state = s.logs.any((l) => l.kind == LogKind.err) ? 'error' : 'running';
-      _refresh();
-    });
-    _refresh();
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
   }
 
-  void stop() {
-    s.sub?.cancel();
-    if (s.state != 'idle') s.logs.add(LogLine('■ تم إيقاف البوت', LogKind.warn));
-    s.state = 'idle';
-    _refresh();
+  Future<void> _poll() async {
+    if (polling) return;
+    polling = true;
+    try {
+      final j = await app.logs(widget.lang.id, next);
+      final got = (j['lines'] as List).cast<Map>();
+      final newNext = j['next'] as int;
+      // إذا بدأ الخادم سجلاً جديداً (تشغيل جديد) نبدأ من الصفر
+      if (newNext - got.length != next) lines.clear();
+      lines.addAll(got);
+      if (lines.length > 3000) lines.removeRange(0, lines.length - 3000);
+      next = newNext;
+      state = j['state'] as String;
+      err = null;
+      if (got.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (scroll.hasClients) scroll.jumpTo(scroll.position.maxScrollExtent);
+        });
+      }
+    } on ApiError catch (e) {
+      err = e.msg;
+    } finally {
+      polling = false;
+    }
+    if (mounted) setState(() {});
   }
 
-  void restart() {
-    s.sub?.cancel();
-    s.state = 'idle';
-    start();
+  Future<void> _act(String a) async {
+    try {
+      state = await app.runAction(widget.lang.id, a);
+      if (a != 'stop') {
+        lines.clear();
+        next = 0;
+      }
+      if (mounted) setState(() {});
+      await _poll();
+    } on ApiError catch (e) {
+      if (mounted) toast(context, e.msg);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final st = s.state;
-    final (label, col) = switch (st) {
+    final (label, col) = switch (state) {
       'running' => ('● يعمل', const Color(0xFF7CFF9B)),
-      'busy' => ('… جاري التشغيل', const Color(0xFFFFD166)),
+      'installing' => ('… جاري التثبيت', const Color(0xFFFFD166)),
       'error' => ('● خطأ', const Color(0xFFFF6B88)),
-      _ => ('● متوقف', Colors.white60),
+      'stopped' => ('● متوقف', Colors.white60),
+      _ => ('● جاهز', Colors.white60),
     };
-    Color lc(LogKind k) => switch (k) {
-          LogKind.ok => const Color(0xFF7CFF9B),
-          LogKind.err => const Color(0xFFFF5C7A),
-          LogKind.warn => const Color(0xFFFFD166),
-          LogKind.info => const Color(0xFF8AB4FF),
-          LogKind.plain => Colors.white70,
+    Color lc(String k) => switch (k) {
+          'ok' => const Color(0xFF7CFF9B),
+          'err' => const Color(0xFFFF5C7A),
+          'warn' => const Color(0xFFFFD166),
+          'info' => const Color(0xFF8AB4FF),
+          _ => Colors.white70,
         };
-    Widget ctl(String t, IconData i, Color c, VoidCallback on) => Expanded(
+    Widget ctl(String t, IconData i, Color c, String act) => Expanded(
           child: PressBtn(
               label: t,
               icon: i,
               height: 46,
               colors: [c, Color.lerp(c, Colors.black, 0.35)!],
-              onTap: on),
+              onTap: () => _act(act)),
         );
     return Column(children: [
       Row(children: [
         Pill(label, col),
         const SizedBox(width: 8),
-        Text('وضع تجريبي محلي',
-            style: TextStyle(color: Colors.white.withOpacity(0.45), fontSize: 11)),
+        if (err != null)
+          Expanded(
+              child: Text(err!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Color(0xFFFF6B88), fontSize: 11)))
+        else
+          Text('تشغيل حقيقي على الخادم',
+              style: TextStyle(color: Colors.white.withOpacity(0.45), fontSize: 11)),
       ]),
       const SizedBox(height: 10),
       Row(children: [
-        ctl('تشغيل', Icons.play_arrow_rounded, const Color(0xFF22C55E), start),
+        ctl('تشغيل', Icons.play_arrow_rounded, const Color(0xFF22C55E), 'start'),
         const SizedBox(width: 8),
-        ctl('إيقاف', Icons.stop_rounded, const Color(0xFFFF4D6D), stop),
+        ctl('إيقاف', Icons.stop_rounded, const Color(0xFFFF4D6D), 'stop'),
         const SizedBox(width: 8),
-        ctl('إعادة', Icons.refresh_rounded, const Color(0xFFF59E0B), restart),
+        ctl('إعادة', Icons.refresh_rounded, const Color(0xFFF59E0B), 'restart'),
       ]),
       const SizedBox(height: 12),
       Expanded(
@@ -1043,15 +1141,20 @@ class _ConsoleTabState extends State<ConsoleTab> {
               color: Colors.black.withOpacity(0.92),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.white12)),
-          child: s.logs.isEmpty
+          child: lines.isEmpty
               ? Text('اضغط «تشغيل» لتشغيل جميع الملفات…',
                   style: TextStyle(color: Colors.white.withOpacity(0.4)))
-              : ListView(controller: scroll, children: [
-                  for (final l in s.logs)
-                    Text(l.text,
-                        style: TextStyle(
-                            color: lc(l.kind), fontFamily: 'monospace', fontSize: 12.5, height: 1.7)),
-                ]),
+              : ListView.builder(
+                  controller: scroll,
+                  itemCount: lines.length,
+                  itemBuilder: (_, i) => Text(lines[i]['t'] as String,
+                      textDirection: TextDirection.ltr,
+                      style: TextStyle(
+                          color: lc(lines[i]['k'] as String),
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                          height: 1.55)),
+                ),
         ),
       ),
     ]);
