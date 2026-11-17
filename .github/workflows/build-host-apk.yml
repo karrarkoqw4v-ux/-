@@ -74,10 +74,16 @@ jobs:
 
       - name: Build release APK
         working-directory: host_app
+        env:
+          API_BASE_VAR: ${{ vars.API_BASE }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
         run: |
+          BASE="$API_BASE_VAR"
+          if [ -z "$BASE" ] && [ -n "$VPS_HOST" ]; then BASE="http://$VPS_HOST:8080"; fi
+          echo "API_BASE configured: ${BASE:-<none>}"
           flutter pub get
           flutter analyze --no-fatal-infos --no-fatal-warnings || true
-          flutter build apk --release --dart-define=API_BASE=${{ vars.API_BASE }}
+          flutter build apk --release --dart-define=API_BASE="$BASE"
 
       - uses: actions/upload-artifact@v4
         with:
