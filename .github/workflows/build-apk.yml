@@ -52,6 +52,20 @@ jobs:
           PY
           cat android/app/src/main/AndroidManifest.xml
 
+      - name: Enable core library desugaring (required by flutter_local_notifications)
+        working-directory: app
+        run: |
+          python3 - <<'PY'
+          p = "android/app/build.gradle.kts"
+          s = open(p, encoding="utf-8").read()
+          if "isCoreLibraryDesugaringEnabled" not in s:
+              s = s.replace("compileOptions {", "compileOptions {\n        isCoreLibraryDesugaringEnabled = true", 1)
+          if "coreLibraryDesugaring" not in s:
+              s += '\n\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")\n}\n'
+          open(p, "w", encoding="utf-8").write(s)
+          PY
+          cat android/app/build.gradle.kts
+
       - name: Build release APK
         working-directory: app
         run: |
