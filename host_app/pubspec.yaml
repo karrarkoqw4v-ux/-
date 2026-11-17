@@ -1,0 +1,23 @@
+name: host_app
+description: استضافة - تطبيق استضافة بوتات تيليجرام
+publish_to: none
+version: 1.0.0
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+dependencies:
+  flutter:
+    sdk: flutter
+  shared_preferences: ^2.2.2
+  http: ^1.2.2
+  file_picker: ^8.1.2
+  archive: ^3.6.1
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: Cairo
+      fonts:
+        - asset: assets/fonts/Cairo-400.ttf
+        - asset: assets/fonts/Cairo-700.ttf
+          weight: 700
+        - asset: assets/fonts/Cairo-900.ttf
+          weight: 900

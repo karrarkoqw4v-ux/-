@@ -4,3 +4,4 @@ app/.dart_tool/
 server/data.json
 server/uploads/
 server/serviceAccountKey.json
+host_server/data/

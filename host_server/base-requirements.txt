@@ -1,0 +1,38 @@
+# مكاتب بايثون جاهزة مسبقاً لكل المستخدمين (تُثبَّت عند بناء الخادم)
+# ── تيليجرام
+pyTelegramBotAPI
+python-telegram-bot
+aiogram
+telethon
+pyrogram
+# ── ديسكورد
+discord.py
+# ── شبكة وويب
+requests
+aiohttp
+httpx
+websockets
+beautifulsoup4
+lxml
+flask
+fastapi
+uvicorn
+yt-dlp
+# ── بيانات وقواعد بيانات
+sqlalchemy
+aiosqlite
+pymongo
+motor
+redis
+pydantic
+# ── أدوات عامة
+python-dotenv
+pytz
+apscheduler
+cryptography
+pillow
+numpy
+pandas
+psutil
+colorama
+tqdm

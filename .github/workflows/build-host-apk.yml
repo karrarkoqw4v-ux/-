@@ -1,0 +1,102 @@
+name: Build Host APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ccr-9cee8c60-d1vffp]
+    paths: ["host_app/**", ".github/workflows/build-host-apk.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Create Android project files
+        working-directory: host_app
+        run: flutter create --platforms=android --org com.hostapp --project-name host_app .
+
+      - name: Patch AndroidManifest (name + internet)
+        working-directory: host_app
+        run: |
+          python3 - <<'PY'
+          import re
+          p = "android/app/src/main/AndroidManifest.xml"
+          s = open(p, encoding="utf-8").read()
+          if "android.permission.INTERNET" not in s:
+              s = s.replace("<application", '<uses-permission android:name="android.permission.INTERNET"/>\n    <application', 1)
+          s = s.replace("<application", '<application android:usesCleartextTraffic="true"', 1)
+          s = re.sub(r'android:label="[^"]*"', 'android:label="استضافة"', s, count=1)
+          open(p, "w", encoding="utf-8").write(s)
+          PY
+
+      - name: Disable lint on release
+        working-directory: host_app
+        run: |
+          python3 - <<'PY'
+          p = "android/app/build.gradle.kts"
+          s = open(p, encoding="utf-8").read()
+          if "checkReleaseBuilds" not in s:
+              s = s.replace("compileOptions {", 'lint {\n        checkReleaseBuilds = false\n        abortOnError = false\n    }\n\n    compileOptions {', 1)
+          open(p, "w", encoding="utf-8").write(s)
+          PY
+
+      - name: Force compileSdk 36 for plugins
+        working-directory: host_app
+        run: |
+          cat >> android/build.gradle.kts <<'KTS'
+
+          subprojects {
+              if (name != "app") {
+                  val forceSdk = {
+                      extensions.findByName("android")?.let {
+                          (it as com.android.build.gradle.BaseExtension).compileSdkVersion(36)
+                      }
+                  }
+                  if (state.executed) forceSdk() else afterEvaluate { forceSdk() }
+              }
+          }
+          KTS
+          tail -20 android/build.gradle.kts
+
+      - name: Build release APK
+        working-directory: host_app
+        env:
+          API_BASE_VAR: ${{ vars.API_BASE }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          BASE="$API_BASE_VAR"
+          if [ -z "$BASE" ] && [ -n "$VPS_HOST" ]; then BASE="http://$VPS_HOST:8080"; fi
+          echo "API_BASE configured: ${BASE:-<none>}"
+          flutter pub get
+          flutter analyze --no-fatal-infos --no-fatal-warnings || true
+          flutter build apk --release --dart-define=API_BASE="$BASE"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: host-apk
+          path: host_app/build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Commit APK to releases/
+        run: |
+          mkdir -p releases
+          cp host_app/build/app/outputs/flutter-apk/app-release.apk releases/host-latest.apk
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          git add releases/host-latest.apk
+          git commit -m "Update host APK" || exit 0
+          git pull --rebase origin "${GITHUB_REF_NAME}" || true
+          git push origin "HEAD:${GITHUB_REF_NAME}"
