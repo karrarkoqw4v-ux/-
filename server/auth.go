@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -86,7 +87,39 @@ func publicUser(u User) map[string]string {
 	return map[string]string{"id": u.ID, "name": u.Name, "username": u.Username, "email": u.Email, "avatar": u.Avatar}
 }
 
-func nameValid(n string) bool { return len(strings.Fields(n)) >= 3 }
+func nameValid(n string) bool { return len(strings.Fields(n)) >= 3 && utf8.RuneCountInString(n) <= 35 }
+
+// seedDemo يسوّي حسابين تجريبيين مع محادثة فيها رسائل، بس لو ما فيه
+// مستخدمين أبداً (أول تشغيل). يسهّل تجربة التطبيق بدون تسجيل يدوي.
+func seedDemo() {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	if len(store.Users) > 0 {
+		return
+	}
+	hash, _ := bcrypt.GenerateFromPassword([]byte("demo1234"), bcrypt.DefaultCost)
+	u1 := User{ID: randHex(8), Name: "حساب تجريبي أول", Username: "demo1", Email: "demo1@test.com", Hash: hash}
+	u2 := User{ID: randHex(8), Name: "حساب تجريبي ثاني", Username: "demo2", Email: "demo2@test.com", Hash: hash}
+	store.Users = append(store.Users, u1, u2)
+
+	c := store.getOrCreateConv(u1.ID, u2.ID)
+	now := time.Now()
+	msgs := []struct {
+		from string
+		text string
+	}{
+		{u1.ID, "هلا، شلونك؟"},
+		{u2.ID, "هلا والله زين الحمدلله، وإنت؟"},
+		{u1.ID, "تمام، هذا حساب تجريبي أشوف فيه المحادثات"},
+		{u2.ID, "ما شاء الله تصميم جماعتكم حلو 🔥"},
+	}
+	for i, m := range msgs {
+		c.Messages = append(c.Messages, Message{ID: randHex(8), ConvID: c.ID, SenderID: m.from, Text: m.text, At: now.Add(time.Duration(i) * time.Minute)})
+	}
+	c.ReadAt[u1.ID] = now.Add(time.Duration(len(msgs)) * time.Minute)
+	store.save()
+	log.Printf("حسابات تجريبية: demo1@test.com / demo2@test.com — كلمة السر: demo1234")
+}
 
 // GET /api/auth/username-available?username=
 func usernameAvailable(w http.ResponseWriter, r *http.Request) {
@@ -115,7 +148,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 
 	switch {
 	case !nameValid(name):
-		fail(w, 400, "name", "الاسم لازم يكون ثلاثي أو أكثر")
+		fail(w, 400, "name", "الاسم لازم يكون ثلاثي أو أكثر، وبحد أقصى 35 حرف")
 		return
 	case !usernameRe.MatchString(username):
 		fail(w, 400, "username", "اسم المستخدم 3-20 حرف إنجليزي أو أرقام أو _ .")

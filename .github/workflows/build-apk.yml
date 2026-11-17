@@ -43,7 +43,9 @@ jobs:
               s = s.replace("<application", '<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>\n    <application', 1)
           s = s.replace("<application", '<application android:usesCleartextTraffic="true"', 1)
           s = s.replace('android:label="jamaatkum"', 'android:label="جماعتكم"')
-          crop = '<activity android:name="com.yalantis.ucrop.UCropActivity" android:screenOrientation="portrait" android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>'
+          # windowOptOutEdgeToEdgeEnforcement يمنع شريط أزرار شاشة القص (موافق/إلغاء)
+          # من الانزلاق تحت شريط الحالة واختفاءه على أجهزة أندرويد 15+
+          crop = '<activity android:name="com.yalantis.ucrop.UCropActivity" android:screenOrientation="portrait" android:theme="@style/Theme.AppCompat.Light.NoActionBar" android:windowOptOutEdgeToEdgeEnforcement="true"/>'
           if "UCropActivity" not in s:
               s = s.replace("</application>", "    " + crop + "\n    </application>", 1)
           open(p, "w", encoding="utf-8").write(s)

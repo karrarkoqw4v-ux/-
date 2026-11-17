@@ -25,6 +25,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _userOk = false;
   String? _serverError;
   Timer? _debounce;
+  int _userCheckSeq = 0; // يمنع رد قديم متأخر يكتب فوق نتيجة أحدث
   final _emailRe = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
   // الصورة: المعرض (يطلب الصلاحية تلقائياً) ثم قص مربع ثابت 1:1 وتصغير لـ 512
@@ -39,7 +40,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
       maxHeight: 512,
       compressQuality: 85,
       uiSettings: [
-        AndroidUiSettings(toolbarTitle: 'تحديد الصورة', toolbarColor: bgDark, toolbarWidgetColor: Colors.white, activeControlsWidgetColor: brand, lockAspectRatio: true, hideBottomControls: true, cropFrameColor: Colors.white, cropGridColor: Colors.transparent, showCropGrid: false),
+        AndroidUiSettings(
+          toolbarTitle: 'تحديد الصورة',
+          toolbarColor: bgDark,
+          statusBarColor: bgDark, // نفس لون الشريط حتى ما يصير فرق فوق يخفي الأزرار
+          backgroundColor: bgDark,
+          toolbarWidgetColor: Colors.white,
+          activeControlsWidgetColor: brand,
+          lockAspectRatio: true,
+          hideBottomControls: false, // نخلي شريط الأزرار تحت ظاهر دايماً كاحتياط لو شريط الأعلى انقص على بعض الأجهزة
+          cropFrameColor: Colors.white,
+          cropGridColor: Colors.transparent,
+          showCropGrid: false,
+        ),
       ],
     );
     if (c != null) setState(() => _avatar = File(c.path));
@@ -48,20 +61,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _onUserChanged(String v) {
     _debounce?.cancel();
     final u = v.trim().toLowerCase();
+    final seq = ++_userCheckSeq; // رقم هذا الطلب
     setState(() { _userOk = false; _userError = null; });
-    if (u.isEmpty) return;
+    if (u.isEmpty) { setState(() => _checking = false); return; }
     if (!RegExp(r'^[a-z0-9_.]{3,20}$').hasMatch(u)) {
-      setState(() => _userError = '3-20 حرف إنجليزي أو أرقام أو _ .');
+      setState(() { _userError = '3-20 حرف إنجليزي أو أرقام أو _ .'; _checking = false; });
       return;
     }
     setState(() => _checking = true);
-    _debounce = Timer(const Duration(milliseconds: 450), () async {
+    _debounce = Timer(const Duration(milliseconds: 350), () async {
       try {
         final r = await Api.usernameCheck(u);
-        if (!mounted) return;
+        if (!mounted || seq != _userCheckSeq) return; // وصل رد لطلب قديم بعد ما المستخدم غيّر الكتابة، نتجاهله
         setState(() { _checking = false; _userError = r; _userOk = r == null; });
       } catch (_) {
-        if (mounted) setState(() => _checking = false);
+        if (mounted && seq == _userCheckSeq) setState(() => _checking = false);
       }
     });
   }
@@ -100,6 +114,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       errorText: error,
       helperText: helper,
       helperStyle: const TextStyle(color: Colors.greenAccent),
+      counterText: '', // نخفي عداد الأحرف الافتراضي، الحد الأقصى يشتغل بصمت
       contentPadding: const EdgeInsets.symmetric(vertical: 16),
       border: line(base),
       enabledBorder: line(base),
@@ -156,6 +171,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       TextFormField(
                         controller: _name,
                         textInputAction: TextInputAction.next,
+                        maxLength: 35, // حد أقصى 35 حرف حتى ما حد يكتب اسم طويل جداً
                         decoration: _dec('الاسم الثلاثي', Icons.badge_outlined),
                         validator: (v) => (v ?? '').trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length >= 3 ? null : 'الاسم لازم يكون ثلاثي أو أكثر',
                       ),

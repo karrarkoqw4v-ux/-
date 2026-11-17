@@ -34,6 +34,7 @@ func cors(h http.HandlerFunc) http.HandlerFunc {
 
 func main() {
 	store.load()
+	seedDemo()
 	http.Handle("GET /uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))
 	http.HandleFunc("GET /api/auth/username-available", cors(usernameAvailable))
 	http.HandleFunc("POST /api/auth/register", cors(register))
