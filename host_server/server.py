@@ -289,6 +289,7 @@ class Project:
             "PIP_DISABLE_PIP_VERSION_CHECK": "1",
             "PIP_NO_INPUT": "1",
             "NPM_CONFIG_UPDATE_NOTIFIER": "false",
+            "NODE_PATH": "/usr/local/lib/node_modules:/usr/lib/node_modules",
         }
 
     def _as_user(self):
@@ -393,8 +394,8 @@ class Project:
             req = os.path.join(d, "requirements.txt")
             has_req = os.path.isfile(req) and open(req, encoding="utf-8", errors="replace").read().strip()
             if not os.path.isdir(os.path.join(d, ".venv")):
-                self.log("info", "› إنشاء بيئة بايثون معزولة")
-                if self._exec([sys.executable, "-m", "venv", ".venv"], timeout=180) != 0:
+                self.log("info", "› إنشاء بيئة بايثون معزولة (مع المكاتب القوية الجاهزة مسبقاً)")
+                if self._exec([sys.executable, "-m", "venv", "--system-site-packages", ".venv"], timeout=180) != 0:
                     self.log("err", "فشل إنشاء البيئة")
                     return False
             if has_req:

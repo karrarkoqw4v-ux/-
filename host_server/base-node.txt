@@ -1,0 +1,13 @@
+telegraf
+node-telegram-bot-api
+grammy
+discord.js
+axios
+node-fetch
+express
+dotenv
+cheerio
+mongoose
+sqlite3
+moment
+ws
