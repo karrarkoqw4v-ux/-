@@ -34,6 +34,7 @@ func cors(h http.HandlerFunc) http.HandlerFunc {
 
 func main() {
 	store.load()
+	initFirebase() // اختياري: يشتغل السيرفر حتى بدون ملف مفتاح حساب الخدمة
 	seedDemo()
 	http.Handle("GET /uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))
 	http.HandleFunc("GET /api/auth/username-available", cors(usernameAvailable))

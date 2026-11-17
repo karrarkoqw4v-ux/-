@@ -160,6 +160,7 @@ func startConversation(w http.ResponseWriter, r *http.Request, me User) {
 	}
 	c := store.getOrCreateConv(me.ID, other.ID)
 	store.save()
+	fbSyncConversation(c)
 	json.NewEncoder(w).Encode(map[string]any{"id": c.ID, "user": publicUser(other)})
 }
 
@@ -202,5 +203,6 @@ func sendMessage(w http.ResponseWriter, r *http.Request, me User) {
 	c.Messages = append(c.Messages, m)
 	c.ReadAt[me.ID] = m.At
 	store.save()
+	fbSyncMessage(m)
 	json.NewEncoder(w).Encode(m)
 }

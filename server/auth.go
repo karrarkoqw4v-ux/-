@@ -113,8 +113,13 @@ func seedDemo() {
 		{u1.ID, "تمام، هذا حساب تجريبي أشوف فيه المحادثات"},
 		{u2.ID, "ما شاء الله تصميم جماعتكم حلو 🔥"},
 	}
+	fbSyncUser(u1)
+	fbSyncUser(u2)
+	fbSyncConversation(c)
 	for i, m := range msgs {
-		c.Messages = append(c.Messages, Message{ID: randHex(8), ConvID: c.ID, SenderID: m.from, Text: m.text, At: now.Add(time.Duration(i) * time.Minute)})
+		msg := Message{ID: randHex(8), ConvID: c.ID, SenderID: m.from, Text: m.text, At: now.Add(time.Duration(i) * time.Minute)}
+		c.Messages = append(c.Messages, msg)
+		fbSyncMessage(msg)
 	}
 	c.ReadAt[u1.ID] = now.Add(time.Duration(len(msgs)) * time.Minute)
 	store.save()
@@ -210,6 +215,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 	token := randHex(24)
 	store.Sessions[token] = u.ID
 	store.save()
+	fbSyncUser(u) // نسخة من الملف الشخصي (بدون كلمة السر) لقاعدة بيانات فايربيس
 	w.WriteHeader(201)
 	json.NewEncoder(w).Encode(map[string]any{"token": token, "user": publicUser(u)})
 }
