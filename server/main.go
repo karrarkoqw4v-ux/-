@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"sync"
 )
@@ -63,6 +64,10 @@ func main() {
 		}
 		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
 	}))
-	log.Println("جماعتكم server on :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	port := os.Getenv("PORT") // استضافات مثل Render تحدد المنفذ بمتغير بيئة
+	if port == "" {
+		port = "8080"
+	}
+	log.Println("جماعتكم server on :" + port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
