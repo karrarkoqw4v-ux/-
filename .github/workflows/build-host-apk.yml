@@ -53,6 +53,24 @@ jobs:
           open(p, "w", encoding="utf-8").write(s)
           PY
 
+      - name: Force compileSdk 36 for plugins
+        working-directory: host_app
+        run: |
+          cat >> android/build.gradle.kts <<'KTS'
+
+          subprojects {
+              if (name != "app") {
+                  val forceSdk = {
+                      extensions.findByName("android")?.let {
+                          (it as com.android.build.gradle.BaseExtension).compileSdkVersion(36)
+                      }
+                  }
+                  if (state.executed) forceSdk() else afterEvaluate { forceSdk() }
+              }
+          }
+          KTS
+          tail -20 android/build.gradle.kts
+
       - name: Build release APK
         working-directory: host_app
         run: |
