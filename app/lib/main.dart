@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'api.dart';
 import 'feed_screen.dart';
 import 'login_screen.dart';
+import 'notifications.dart';
 import 'theme.dart';
 
-void main() => runApp(const JamaatkumApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  Notifications.init(); // يطلب إذن الإشعارات أول ما يفتح التطبيق
+  runApp(const JamaatkumApp());
+}
 
 class JamaatkumApp extends StatelessWidget {
   const JamaatkumApp({super.key});

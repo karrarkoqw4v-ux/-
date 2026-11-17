@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'api.dart';
 import 'chat_screen.dart';
+import 'notifications.dart';
 import 'theme.dart';
 
 /// وقت مختصر بالعربي: الآن، قبل ٥ د، قبل ٣ س، أمس...
@@ -28,21 +30,36 @@ class ChatListScreen extends StatefulWidget {
 class _ChatListScreenState extends State<ChatListScreen> {
   List<dynamic>? _convs;
   String? _error;
+  int _lastUnread = -1; // -1 = أول تحميل، ما نبلّغ عنه
+  Timer? _poll;
 
   @override
   void initState() {
     super.initState();
     _load();
+    // فحص دوري: لو زاد عدد الرسائل غير المقروءة نطلع إشعار (التطبيق لازم يكون شغّال)
+    _poll = Timer.periodic(const Duration(seconds: 15), (_) => _load(silent: true));
   }
 
-  Future<void> _load() async {
+  @override
+  void dispose() {
+    _poll?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load({bool silent = false}) async {
     try {
       final c = await Api.conversations();
+      final unread = c.fold<int>(0, (s, x) => s + (x['unreadCount'] as int? ?? 0));
+      if (_lastUnread != -1 && unread > _lastUnread) {
+        Notifications.show(id: 1, title: 'رسالة جديدة', body: unread == 1 ? 'عندك رسالة جديدة' : 'عندك $unread رسائل غير مقروءة');
+      }
+      _lastUnread = unread;
       if (mounted) setState(() => _convs = c);
     } on ApiException catch (e) {
-      if (mounted) setState(() => _error = e.message);
+      if (mounted && !silent) setState(() => _error = e.message);
     } catch (_) {
-      if (mounted) setState(() => _error = 'تعذر الاتصال بالسيرفر');
+      if (mounted && !silent) setState(() => _error = 'تعذر الاتصال بالسيرفر');
     }
   }
 
